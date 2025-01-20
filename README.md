@@ -1,6 +1,8 @@
 # Teste para Desenvolvedor Fullstack - Kognita
 
-## Prazo: 1 semana (7 dias) a partir do recebimento do mesmo
+## Prazo: 
+
+1 semana (7 dias) a partir do recebimento do mesmo
 
 
 ## Objetivo do Teste
