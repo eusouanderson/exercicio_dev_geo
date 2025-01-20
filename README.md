@@ -39,11 +39,26 @@ Criar uma aplicação web interativa com mapas que permita o usuário final visu
    - Exiba o mapa utilizando **Leaflet** ou **Mapbox**.  
    - Implemente funcionalidades que permitam desenhar polígonos no mapa, e realizar e exibir o resultado de operações sobre a área demarcada para o usuário final. Operações: total de pontos, soma, média e mediana.
 
-
 4. **Integração com a API OpenStreetMap**  
    - Adicione uma funcionalidade que permita que o usuário insira pinos ao clicar no mapa.  
    - Para cada pino adicionado, consulte a API do OpenStreetMap com as coordenadas correspondentes.  
-   - Persista e exiba as informações retornadas ao clicar ou passar o mouse sobre os pinos.
+   - Persista e exiba (quando possível) as informações retornadas ao clicar ou passar o mouse sobre os pinos.
+    - O ponto { lat: 40.748817, lon: -73.985428} tem o seguinte resultado: 
+        ```bash
+        {
+            "place_id": 123456,
+            "lat": "40.748817",
+            "lon": "-73.985428",
+            "display_name": "Empire State Building, New York, NY, USA",
+            "address": {
+                "building": "Empire State Building",
+                "city": "New York",
+                "state": "NY",
+                "country": "United States",
+                "postcode": "10118"
+            }
+        }
+        ```
 
 5. **Testes e Documentação**  
    - Inclua testes básicos para validar o funcionamento das principais funcionalidades.  
