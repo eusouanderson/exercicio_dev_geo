@@ -30,20 +30,20 @@ Criar uma aplicação web interativa com mapas que permita o usuário final visu
 1. **Configuração Inicial**  
    - Escolha e configure as dependências necessárias para o projeto (ex.: React ou outro framework, Leaflet/Mapbox, Express).  
    - Configure um servidor básico usando Node.js para servir a aplicação e processar chamadas à API.
-
-2. **Implementação do Mapa**  
-   - Exiba o mapa utilizando **Leaflet** ou **Mapbox**.  
-   - Implemente funcionalidades que permitam desenhar polígonos no mapa.
-
-3. **Utilização das Bases de Dados**  
-   - Use os arquivos fornecidos na pasta `files` para adicionar pontos ao mapa como marcadores.  
+  
+2. **Utilização das Bases de Dados**  
+   - Use os arquivos fornecidos na pasta `files` para adicionar pontos ao mapa.  
    - Configure eventos para que, ao clicar ou passar o mouse sobre os marcadores, informações básicas (ex.: nome, ID) sejam exibidas.  
-   - Permita que o usuário desenhe um polígono no mapa e liste ou conte os pontos do JSON que estão dentro da área delimitada.
+
+3. **Implementação do Mapa**  
+   - Exiba o mapa utilizando **Leaflet** ou **Mapbox**.  
+   - Implemente funcionalidades que permitam desenhar polígonos no mapa, e realizar e exibir o resultado de operações sobre a área demarcada para o usuário final. Operações: total de pontos, soma, média e mediana.
+
 
 4. **Integração com a API OpenStreetMap**  
-   - Adicione a funcionalidade de inserir pinos ao clicar no mapa.  
+   - Adicione uma funcionalidade que permita que o usuário insira pinos ao clicar no mapa.  
    - Para cada pino adicionado, consulte a API do OpenStreetMap com as coordenadas correspondentes.  
-   - Exiba as informações retornadas ao clicar ou passar o mouse sobre os pinos.
+   - Persista e exiba as informações retornadas ao clicar ou passar o mouse sobre os pinos.
 
 5. **Testes e Documentação**  
    - Inclua testes básicos para validar o funcionamento das principais funcionalidades.  
