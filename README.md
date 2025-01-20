@@ -33,7 +33,7 @@ Criar uma aplicação web interativa com mapas que permita o usuário final visu
   
 2. **Utilização das Bases de Dados**  
    - Use os arquivos fornecidos na pasta `files` para adicionar pontos ao mapa.  
-   - Configure eventos para que, ao clicar ou passar o mouse sobre os marcadores, informações básicas (ex.: nome, ID) sejam exibidas.  
+   - Configure eventos para que, ao clicar ou passar o mouse sobre os marcadores, a informação de `censo_2022_domicilio_particular_poi_counts` seja exibida.  
 
 3. **Implementação do Mapa**  
    - Exiba o mapa utilizando **Leaflet** ou **Mapbox**.  
