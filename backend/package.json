@@ -1,23 +1,33 @@
 {
   "name": "backend",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "drizzle-orm": "^0.44.4",
     "hono": "^4.9.2",
     "install": "^0.13.0",
+    "jsonwebtoken": "^9.0.2",
     "papaparse": "^5.5.3",
     "pg": "^8.16.3",
     "postgres": "^3.4.7"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/papaparse": "^5.3.16",
-    "@types/pg": "^8.15.5"
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.4"
   },
   "private": true,
   "scripts": {
+    "db:cli": "docker exec -it my_postgres psql -U myuser -d mydatabase",
+    "image": "docker exec -it my_postgres bash",
+    "push": "npx drizzle-kit push",
+    "generate": "npx drizzle-kit generate",
+    "migrate": "npx drizzle-kit migrate",
     "dev": "bun --hot src/server.ts",
     "start": "bun src/server.ts",
-    "typecheck": "tsc --noEmit",
-    "format": "bun fmt ."
+    "typecheck": "tsc --noEmit"
   }
 }

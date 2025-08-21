@@ -1,0 +1,62 @@
+@baseURL = http://localhost:3002
+@testTOKEN=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+
+### Health
+GET {{baseURL}}
+Authorization:@{{testTOKEN}}
+
+### Points
+
+GET {{baseURL}}/api/points
+Authorization:@{{testTOKEN}}
+### Return
+
+# {
+#   "type": "FeatureCollection",
+#   "features": [
+#     {
+#       "type": "Feature",
+#       "properties": {
+#         "latitude": -20.339369,
+#         "longitude": -50.610836,
+#         "censo_2022_estabelecimento_outras_finalidades_poi_counts": 0,
+#         "censo_2022_domicilio_particular_poi_counts": 0,
+#         "censo_2022_estabelecimento_construcao_poi_counts": 0,
+#         "censo_2022_estabelecimento_religioso_poi_counts": 0,
+#         "cens
+
+### Points page 
+GET {{baseURL}}/api/points?page=1&limit=1
+Authorization:@{{testTOKEN}}
+
+### Return
+# {
+#   "type": "FeatureCollection",
+#   "features": [
+#     {
+#       "type": "Feature",
+#       "properties": {
+#         "latitude": -20.339369,
+#         "longitude": -50.610836,
+#         "censo_2022_estabelecimento_outras_finalidades_poi_counts": 0,
+#         "censo_2022_domicilio_particular_poi_counts": 0,
+#         "censo_2022_estabelecimento_construcao_poi_counts": 0,
+#         "censo_2022_estabelecimento_religioso_poi_counts": 0,
+#         "censo_2022_estabelecimento_ensino_poi_counts": 0,
+#         "censo_2022_estabelecimento_saude_poi_counts": 0,
+#         "censo_2022_domicilio_coletivo_poi_counts": 0,
+#         "censo_2022_estabelecimento_agro_poi_counts": 0
+#       },
+#       "geometry": {
+#         "type": "Point",
+#         "coordinates": [
+#           -50.610836,
+#           -20.339369
+#         ]
+#       }
+#     }
+#   ],
+#   "total": 67766,
+#   "page": 1,
+#   "limit": 1
+# }
