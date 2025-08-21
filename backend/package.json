@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot src/server.ts",
+    "start": "bun src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "format": "bun fmt ."
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/papaparse": "^5.3.16",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "hono": "^4.9.2",
+    "install": "^0.13.0",
+    "papaparse": "^5.5.3"
+  }
+}
