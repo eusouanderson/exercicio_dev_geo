@@ -44,3 +44,38 @@
   }
 }
 ```
+
+## Estrutura
+
+MVC (routes, controllers, services, utils).
+
+```json
+.
+├── bun.lock
+├── client.http
+├── docker-compose.yml
+├── package.json
+├── README.md
+├── src
+│   ├── app.ts
+│   ├── controllers
+│   │   └── points_controller.ts
+│   ├── db
+│   │   └── connect.ts
+│   ├── routes
+│   │   ├── index.ts
+│   │   └── points_routes.ts
+│   ├── server.ts
+│   ├── services
+│   │   └── points_service.ts
+│   └── utils
+│       └── csv_loader.ts
+├── tests
+│   ├── controllers
+│   │   └── points_controller.test.ts
+│   ├── services
+│   │   └── points_service.test.ts
+│   └── utils
+│       └── csv_loader.test.ts
+└── tsconfig.json
+```
