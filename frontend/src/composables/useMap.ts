@@ -4,13 +4,14 @@ import * as turf from "@turf/turf";
 import * as L from "leaflet";
 import "leaflet-draw";
 import "leaflet-draw/dist/leaflet.draw.css";
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet/dist/leaflet.css";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
-// ADICIONADO: Import do serviço para carregar e salvar pinos persistidos.
 import * as geoService from "@/services/geoService";
 
-// ADICIONADO: Correção para o ícone padrão do Leaflet, uma boa prática para evitar bugs visuais.
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -31,56 +32,78 @@ export interface AnalysisResult {
   median: number;
 }
 
+export interface DataFilter {
+  min_value: number | null;
+}
+
 export function useMap(mapContainerId: string) {
-  // --- STATE ---
-  const showPoints = ref(true);
+  // --- estado ---
   const allPointsData = ref<any[]>([]);
   const analysisResult = ref<AnalysisResult | null>(null);
   const interactionMode = ref<"navigate" | "draw">("navigate");
+  const filter = ref<DataFilter>({ min_value: null });
+  const mapType = ref<"roadmap" | "satellite" | "hybrid">("roadmap");
+  const showPoints = ref(true);
 
   let map: L.Map;
-  let pointsLayer: L.LayerGroup; // Camada para pontos de análise (GeoJSON)
-  let customLayer: L.LayerGroup; // ADICIONADO: Camada para pinos persistidos (do geoService)
+  let pointsLayer: L.MarkerClusterGroup;
+  let customLayer: L.LayerGroup;
+  let savedPolygonsLayer: L.FeatureGroup;
   let drawnItems: L.FeatureGroup;
-  let drawControl: L.Control.Draw; // ADICIONADO: Referência ao controle de desenho
+  let drawControl: L.Control.Draw;
+  let tileLayer: L.TileLayer;
 
-  // --- MÉTODOS ---
-
-  // ALTERADO: Versão aprimorada que desativa o arrastar do mapa e as ferramentas de desenho.
   const setInteractionMode = (mode: "navigate" | "draw") => {
     interactionMode.value = mode;
-    if (map) {
-      if (mode === "draw") {
-        map.dragging.disable();
-      } else {
-        map.dragging.enable();
-        // Garante que as ferramentas de desenho sejam desativadas ao sair do modo
-        if (drawControl) {
-          (drawControl as any)._toolbars.draw.disable();
-          (drawControl as any)._toolbars.edit.disable();
-        }
-      }
+    if (!map) return;
+    if (mode === "draw") {
+      map.dragging.disable();
+    } else {
+      map.dragging.enable();
     }
   };
 
-  // Esta função carrega os pontos para ANÁLISE (GeoJSON)
-  const loadPoints = async ({ page = 1, limit = 1000 } = {}) => {
+  const updatePointsLayer = () => {
+    if (!pointsLayer) return;
+    pointsLayer.clearLayers();
+    const filteredData = allPointsData.value.filter((feature) => {
+      const properties = feature.properties || {};
+      if (
+        filter.value.min_value !== null &&
+        properties.value < filter.value.min_value
+      ) {
+        return false;
+      }
+      return true;
+    });
+
+    const markers = filteredData.map((feature: any) => {
+      const [lng, lat] = feature.geometry.coordinates;
+      const popupContent = Object.entries(feature.properties)
+        .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+        .join("<br>");
+      return L.marker([lat, lng]).bindPopup(popupContent);
+    });
+    pointsLayer.addLayers(markers);
+  };
+
+  watch(filter, updatePointsLayer, { deep: true });
+
+  const fetchAllPoints = async ({ page = 1, limit = 1000 } = {}) => {
     try {
       const data = await getPoints(page, limit);
-      pointsLayer.clearLayers();
-      allPointsData.value = [];
-
-      if (data.features && data.features.length) {
+      if (data?.features) {
         allPointsData.value = data.features;
-        const latlngs: L.LatLngExpression[] = [];
-        allPointsData.value.forEach((feature: any) => {
-          const [lng, lat] = feature.geometry.coordinates;
-          const popupContent = Object.entries(feature.properties)
-            .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
-            .join("<br>");
-          L.marker([lat, lng]).bindPopup(popupContent).addTo(pointsLayer);
-          latlngs.push([lat, lng]);
-        });
+        updatePointsLayer();
+
+        const latlngs = allPointsData.value.map(
+          (f: any) =>
+            [
+              f.geometry.coordinates[1],
+              f.geometry.coordinates[0],
+            ] as L.LatLngExpression
+        );
+
         if (latlngs.length) {
           map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
         }
@@ -90,7 +113,6 @@ export function useMap(mapContainerId: string) {
     }
   };
 
-  // ADICIONADO: Função para carregar os pinos que já estão salvos no banco de dados.
   const loadPersistedPoints = async () => {
     try {
       const persistedPoints = await geoService.listGeoPoints();
@@ -108,6 +130,32 @@ export function useMap(mapContainerId: string) {
     }
   };
 
+  const loadSavedPolygons = async () => {
+    try {
+      const polygons = await polygonService.listPolygons();
+
+      if (polygons && Array.isArray(polygons)) {
+        polygons.forEach((polygon: any) => {
+          const latlngs: L.LatLngTuple[] = JSON.parse(polygon.coordinates).map(
+            (coord: number[]) => [coord[0], coord[1]] as L.LatLngTuple
+          );
+
+          const polygonLayer = L.polygon(latlngs, {
+            color: "#3388ff",
+          }).bindPopup(
+            `<b>${polygon.name}</b><br>Contém ${
+              polygon.pointsInside?.length || "N/A"
+            } pontos.`
+          );
+
+          savedPolygonsLayer.addLayer(polygonLayer);
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao carregar polígonos salvos:", error);
+    }
+  };
+
   const analyzePolygon = (polygonLayer: L.Polygon) => {
     const polygonGeoJSON = polygonLayer.toGeoJSON();
     const pointsGeoJSON = turf.featureCollection(
@@ -117,19 +165,18 @@ export function useMap(mapContainerId: string) {
     );
 
     const ptsWithin = turf.pointsWithinPolygon(pointsGeoJSON, polygonGeoJSON);
-
     const values = ptsWithin.features
-      .map((f) => f.properties.value)
-      .filter((v) => typeof v === "number");
+      .map((f: any) => f.properties.value)
+      .filter((v): v is number => typeof v === "number");
 
-    if (!values.length) {
-      analysisResult.value = { totalPoints: 0, sum: 0, mean: 0, median: 0 };
-      return { pointsInside: [], analysis: analysisResult.value };
+    if (values.length === 0) {
+      const result = { totalPoints: 0, sum: 0, mean: 0, median: 0 };
+      analysisResult.value = result;
+      return { pointsInside: [], analysis: result };
     }
 
     const sum = values.reduce((acc, val) => acc + val, 0);
     const mean = sum / values.length;
-
     values.sort((a, b) => a - b);
     const mid = Math.floor(values.length / 2);
     const median =
@@ -143,22 +190,83 @@ export function useMap(mapContainerId: string) {
       mean: parseFloat(mean.toFixed(2)),
       median: parseFloat(median.toFixed(2)),
     };
-
-    const pointIdsInside = ptsWithin.features.map((f) => f.properties.id);
+    const pointIdsInside = ptsWithin.features.map((f: any) => f.properties.id);
     return { pointsInside: pointIdsInside, analysis: analysisResult.value };
   };
 
-  const initializeMap = () => {
-    map = L.map(mapContainerId).setView([-23.55052, -46.63331], 13);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "Map &copy; OpenStreetMap contributors",
-    }).addTo(map);
+  const setMapType = (type: "roadmap" | "satellite" | "hybrid") => {
+    mapType.value = type;
+    const urls = {
+      roadmap: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      satellite:
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      hybrid: "https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}",
+    };
+    const attributions = {
+      roadmap:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      satellite:
+        "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+      hybrid: "&copy; Google",
+    };
+    if (tileLayer) {
+      tileLayer.setUrl(urls[type]);
+      tileLayer.options.attribution = attributions[type];
+      tileLayer.redraw();
+    }
+  };
 
-    pointsLayer = L.layerGroup().addTo(map);
-    customLayer = L.layerGroup().addTo(map); // ADICIONADO
+  const clearAnalysis = () => {
+    drawnItems.clearLayers();
+    analysisResult.value = null;
+  };
+
+  const initializeMap = () => {
+    map = L.map(mapContainerId, {
+      minZoom: 4,
+      maxZoom: 18,
+    }).setView([-23.55052, -46.63331], 5);
+    tileLayer = L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        subdomains: ["a", "b", "c"],
+      }
+    ).addTo(map);
+
+    pointsLayer = L.markerClusterGroup();
+    customLayer = L.layerGroup();
+    savedPolygonsLayer = new L.FeatureGroup();
     drawnItems = new L.FeatureGroup().addTo(map);
 
-    // ALTERADO: Atribuído à variável `drawControl` para referência futura.
+    const overlayLayers = {
+      "Meus Pins": customLayer,
+      "Pontos de Análise": pointsLayer,
+      "Áreas Salvas": savedPolygonsLayer,
+    };
+    L.control
+      .layers(undefined, overlayLayers, { position: "topright" })
+      .addTo(map);
+
+    map.addLayer(customLayer);
+    map.addLayer(savedPolygonsLayer);
+    if (showPoints.value) {
+      map.addLayer(pointsLayer);
+    }
+
+    map.on("overlayadd", (e: L.LayersControlEvent) => {
+      if (e.layer === pointsLayer) {
+        showPoints.value = true;
+      }
+    });
+
+    map.on("overlayremove", (e: L.LayersControlEvent) => {
+      if (e.layer === pointsLayer) {
+        showPoints.value = false;
+      }
+    });
+
     drawControl = new L.Control.Draw({
       edit: { featureGroup: drawnItems },
       draw: {
@@ -175,19 +283,13 @@ export function useMap(mapContainerId: string) {
     });
     map.addControl(drawControl);
 
-    // ADICIONADO: Lógica de clique para salvar e adicionar novos pinos via geoService.
     map.on("click", async (event: L.LeafletMouseEvent) => {
       if (interactionMode.value === "navigate") {
         const { lat, lng } = event.latlng;
         try {
-          // 1. Salva o ponto no backend
           await geoService.createGeoPoint({ lat, lon: lng });
-
-          // 2. Busca os dados de endereço para o popup
           const geoData = await geoService.reverseGeo(lat, lng);
           const popupContent = geoData.display_name || JSON.stringify(geoData);
-
-          // 3. Adiciona o marcador no mapa
           L.marker([lat, lng])
             .bindPopup(popupContent)
             .addTo(customLayer)
@@ -195,7 +297,7 @@ export function useMap(mapContainerId: string) {
         } catch (err) {
           console.error("Erro ao adicionar novo pino:", err);
           L.marker([lat, lng])
-            .bindPopup("Erro ao salvar ou buscar informações do pino.")
+            .bindPopup("Erro ao salvar ou buscar informações.")
             .addTo(customLayer)
             .openPopup();
         }
@@ -203,20 +305,16 @@ export function useMap(mapContainerId: string) {
     });
 
     map.on(L.Draw.Event.CREATED, async (event) => {
-      const layer = (event as any).layer as L.Polygon;
+      const layer = (event as L.DrawEvents.Created).layer as L.Polygon;
       drawnItems.addLayer(layer);
-
       const { pointsInside, analysis } = analyzePolygon(layer);
-
       layer
         .bindPopup(
-          `
-          <h4>Análise da Área</h4>
-          <strong>Total de Pontos:</strong> ${analysis.totalPoints}<br>
-          <strong>Soma:</strong> ${analysis.sum}<br>
-          <strong>Média:</strong> ${analysis.mean}<br>
-          <strong>Mediana:</strong> ${analysis.median}
-        `
+          `<h4>Análise da Área</h4>
+           <strong>Total de Pontos:</strong> ${analysis.totalPoints}<br>
+           <strong>Soma:</strong> ${analysis.sum}<br>
+           <strong>Média:</strong> ${analysis.mean}<br>
+           <strong>Mediana:</strong> ${analysis.median}`
         )
         .openPopup();
 
@@ -226,18 +324,21 @@ export function useMap(mapContainerId: string) {
       );
       if (name) {
         try {
-          const latlngs = layer.getLatLngs() as L.LatLng[][];
-          const coordinates: number[][] = latlngs[0].map((latlng) => [
-            latlng.lat,
-            latlng.lng,
-          ]);
+          const latlngs = layer.getLatLngs()[0] as L.LatLng[];
+          const coordinates = latlngs.map((latlng) => [latlng.lat, latlng.lng]);
 
           await polygonService.createPolygon({
             name,
             coordinates,
             pointsInside,
           });
-          alert("Polígono salvo com sucesso!");
+
+          const newPolygon = L.polygon(layer.getLatLngs(), {
+            color: "#3388ff",
+          }).bindPopup(`<b>${name}</b>`);
+          savedPolygonsLayer.addLayer(newPolygon);
+
+          clearAnalysis();
         } catch (error) {
           console.error("Falha ao salvar polígono:", error);
           alert("Erro ao salvar polígono.");
@@ -246,29 +347,36 @@ export function useMap(mapContainerId: string) {
     });
 
     map.on("draw:drawstart", () => {
-      analysisResult.value = null;
+      clearAnalysis();
     });
   };
 
   const togglePoints = () => {
-    showPoints.value = !showPoints.value;
-    if (map.hasLayer(pointsLayer)) map.removeLayer(pointsLayer);
-    else map.addLayer(pointsLayer);
+    if (!map) return;
+    if (map.hasLayer(pointsLayer)) {
+      map.removeLayer(pointsLayer);
+    } else {
+      map.addLayer(pointsLayer);
+    }
   };
 
-  // ALTERADO: O init agora chama as duas funções de carregamento de pontos.
   const init = async () => {
     initializeMap();
-    await loadPoints(); // Carrega pontos para análise
-    await loadPersistedPoints(); // Carrega pinos salvos do banco de dados
+    await fetchAllPoints();
+    await loadPersistedPoints();
+    await loadSavedPolygons();
   };
 
   return {
-    showPoints,
     analysisResult,
-    togglePoints,
     init,
     interactionMode,
     setInteractionMode,
+    filter,
+    mapType,
+    setMapType,
+    clearAnalysis,
+    showPoints,
+    togglePoints,
   };
 }

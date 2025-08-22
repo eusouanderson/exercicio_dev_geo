@@ -5,6 +5,7 @@ import Components from "unplugin-vue-components/vite";
 import Vuetify, { transformAssetUrls } from "vite-plugin-vuetify";
 
 // Utilities
+import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 
@@ -17,6 +18,7 @@ export default defineConfig({
     // https://github.com/vuetifyjs/vuetify-loader/tree/master/packages/vite-plugin#readme
     Vuetify(),
     Components(),
+    tailwindcss(),
     Fonts({
       fontsource: {
         families: [

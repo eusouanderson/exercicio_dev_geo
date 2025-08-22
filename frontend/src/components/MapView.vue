@@ -1,43 +1,136 @@
 <template>
-  <div id="map-container">
-    <div id="controls" class="controls">
-      <div class="mode-switcher">
+  <div id="map-container" class="relative h-screen w-full m-2">
+    <div
+      id="controls"
+      class="absolute top-4 left-1/2 -translate-x-1/2 z-[1010] bg-amber-600 backdrop-blur-sm p-2 rounded-lg shadow-lg flex items-center gap-4"
+    >
+      <div class="flex rounded-md overflow-hidden border border-gray-300">
         <button
           @click="setInteractionMode('navigate')"
-          :class="{ active: interactionMode === 'navigate' }"
+          :class="
+            interactionMode === 'navigate'
+              ? 'bg-blue-600 text-white'
+              : 'bg-amber-50 hover:bg-blue-100 text-gray-700'
+          "
+          class="px-3 py-1.5 border-r border-gray-300 flex items-center gap-2 transition-colors duration-200"
           title="Navegar e Adicionar Pinos"
         >
-          📍 Navegar
+          <span class="material-icons text-sm">place</span>
+          Navegar
         </button>
         <button
           @click="setInteractionMode('draw')"
-          :class="{ active: interactionMode === 'draw' }"
-          title="Desenhar Polígonos"
+          :class="
+            interactionMode === 'draw'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white hover:bg-blue-100 text-gray-700'
+          "
+          class="px-3 py-1.5 flex items-center gap-2 transition-colors duration-200"
+          title="Desenhar Polígonos para Análise"
         >
-          ✏️ Desenhar
+          <span class="material-icons text-sm">draw</span>
+          Desenhar
         </button>
       </div>
 
-      <button @click="togglePoints" class="toggle-button">
-        {{ showPoints ? "Esconder Pontos" : "Mostrar Pontos" }}
-      </button>
+      <div class="flex rounded-md overflow-hidden border border-gray-300">
+        <button
+          @click="setMapType('roadmap')"
+          :class="
+            mapType === 'roadmap'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white hover:bg-blue-100 text-gray-700'
+          "
+          class="px-3 py-1.5 border-r border-gray-300 transition-colors duration-200"
+          title="Visualização de Ruas"
+        >
+          Mapa
+        </button>
+        <button
+          @click="setMapType('satellite')"
+          :class="
+            mapType === 'satellite'
+              ? 'bg-blue-600 text-white'
+              : 'bg-white hover:bg-blue-100 text-gray-700'
+          "
+          class="px-3 py-1.5 transition-colors duration-200"
+          title="Visualização de Satélite"
+        >
+          Satélite
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button
+          @click="togglePoints"
+          class="px-3 py-1.5 border border-gray-300 rounded-md bg-white hover:bg-blue-100 text-gray-700 flex items-center gap-2 transition-colors duration-200"
+          title="Mostrar ou Esconder os Pontos de Dados"
+        >
+          <span class="material-icons text-sm">{{
+            showPoints ? "visibility_off" : "visibility"
+          }}</span>
+          {{ showPoints ? "Esconder" : "Mostrar" }}
+        </button>
+
+        <button
+          v-if="analysisResult"
+          @click="clearAnalysis"
+          class="px-3 py-1.5 border border-red-400 text-red-500 rounded-md bg-white hover:bg-red-100 flex items-center gap-2 transition-colors duration-200"
+          title="Limpar polígono e resultados da análise"
+        >
+          <span class="material-icons text-sm">delete_forever</span>
+          Limpar
+        </button>
+      </div>
     </div>
 
-    <div v-if="analysisResult" class="analysis-panel">
-      <h3>Análise da Área Desenhada</h3>
-      <ul>
-        <li>
-          <strong>Total de Pontos:</strong> {{ analysisResult.totalPoints }}
-        </li>
-        <li><strong>Soma dos Valores:</strong> {{ analysisResult.sum }}</li>
-        <li><strong>Média dos Valores:</strong> {{ analysisResult.mean }}</li>
-        <li>
-          <strong>Mediana dos Valores:</strong> {{ analysisResult.median }}
-        </li>
-      </ul>
+    <div
+      v-if="analysisResult"
+      class="absolute top-4 right-4 z-[9999] bg-white shadow-xl rounded-lg border border-gray-200 w-72 p-5"
+    >
+      <h3
+        class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"
+      >
+        <span class="material-icons text-blue-500">analytics</span>
+        Análise da Área
+      </h3>
+      <div class="grid grid-cols-1 gap-3">
+        <div
+          class="flex justify-between items-center bg-blue-50 rounded-md p-3"
+        >
+          <span class="text-sm text-gray-600">Total de Pontos</span>
+          <span class="font-semibold text-blue-700">{{
+            analysisResult.totalPoints
+          }}</span>
+        </div>
+        <div
+          class="flex justify-between items-center bg-green-50 rounded-md p-3"
+        >
+          <span class="text-sm text-gray-600">Soma dos Valores</span>
+          <span class="font-semibold text-green-700">{{
+            analysisResult.sum
+          }}</span>
+        </div>
+        <div
+          class="flex justify-between items-center bg-yellow-50 rounded-md p-3"
+        >
+          <span class="text-sm text-gray-600">Média dos Valores</span>
+          <span class="font-semibold text-yellow-700">{{
+            analysisResult.mean
+          }}</span>
+        </div>
+        <div
+          class="flex justify-between items-center bg-purple-50 rounded-md p-3"
+        >
+          <span class="text-sm text-gray-600">Mediana dos Valores</span>
+          <span class="font-semibold text-purple-700">{{
+            analysisResult.median
+          }}</span>
+        </div>
+      </div>
     </div>
 
-    <div id="map" style="height: 100vh; width: 100%"></div>
+    <div id="map" class="h-full w-full inset-0 z-0"></div>
   </div>
 </template>
 
@@ -45,7 +138,6 @@
 import { onMounted } from "vue";
 import { useMap } from "@/composables/useMap";
 
-// Obter tudo o que o template precisa do nosso composable
 const {
   showPoints,
   togglePoints,
@@ -53,102 +145,12 @@ const {
   analysisResult,
   interactionMode,
   setInteractionMode,
+  mapType,
+  setMapType,
+  clearAnalysis,
 } = useMap("map");
 
 onMounted(() => {
   init();
 });
 </script>
-
-<style scoped>
-#map-container {
-  height: 100vh;
-  width: 100%;
-  position: relative;
-}
-
-.controls {
-  position: absolute;
-  top: 10px;
-  /* Posicionado à esquerda dos controles de desenho do Leaflet */
-  left: 50px;
-  z-index: 1000;
-  background: white;
-  padding: 5px;
-  border-radius: 5px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.mode-switcher {
-  display: flex;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.mode-switcher button {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  cursor: pointer;
-  border-right-width: 0;
-}
-
-.mode-switcher button:last-child {
-  border-right-width: 1px;
-}
-
-.mode-switcher button.active {
-  background-color: #3388ff;
-  color: white;
-  border-color: #3388ff;
-}
-
-.mode-switcher button:not(.active):hover {
-  background-color: #f4f4f4;
-}
-
-.toggle-button {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.toggle-button:hover {
-  background-color: #f4f4f4;
-}
-
-.analysis-panel {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 10px 15px;
-  border-radius: 5px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-  width: 250px;
-}
-
-.analysis-panel h3 {
-  margin: 0 0 10px 0;
-  padding-bottom: 5px;
-  border-bottom: 1px solid #ccc;
-  font-size: 16px;
-}
-
-.analysis-panel ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 14px;
-}
-
-.analysis-panel li {
-  margin-bottom: 5px;
-}
-</style>
