@@ -1,10 +1,13 @@
 @baseURL = http://localhost:3002
+@testTOKEN=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 ### Health
 GET {{baseURL}}
 
+
 ### Polygons - List all
 GET {{baseURL}}/api/polygons
+Authorization:@{{testTOKEN}}
 ### Return 
 # [
 #   {
@@ -24,6 +27,7 @@ GET {{baseURL}}/api/polygons
 
 ### Polygons - Get by ID
 GET {{baseURL}}/api/polygons/1
+Authorization:@{{testTOKEN}}
 
 ### Return
 
@@ -42,6 +46,7 @@ GET {{baseURL}}/api/polygons/1
 ### Polygons - Create
 POST {{baseURL}}/api/polygons
 Content-Type: application/json
+Authorization:@{{testTOKEN}}
 
 {
   "name": "Meu Polígono",
@@ -67,8 +72,9 @@ Content-Type: application/json
 # }
 
 ### Polygons - Update
-PUT {{baseURL}}/api/polygons/1
+PUT {{baseURL}}/api/polygons/4
 Content-Type: application/json
+Authorization:@{{testTOKEN}}
 
 {
   "name": "Polígono Atualizado",
@@ -96,4 +102,5 @@ Content-Type: application/json
 # }
 
 ### Polygons - Delete
-DELETE {{baseURL}}/api/polygons/1
+DELETE {{baseURL}}/api/polygons/4
+Authorization:@{{testTOKEN}}

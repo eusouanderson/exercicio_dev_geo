@@ -1,5 +1,5 @@
+import { verifyToken } from '@/auth/jwt';
 import { Context } from 'hono';
-import { verifyToken } from './jwt';
 
 export const authMiddleware = async (c: Context, next: () => Promise<void>) => {
   const authHeader = c.req.header('Authorization');
