@@ -55,7 +55,7 @@ Authorization:@{{testTOKEN}}
     [ -46.63400, -23.55050 ],
     [ -46.63350, -23.55100 ]
   ],
-  "pointsInside": [5, 10, 15] 
+  "pointsInside": [5, 5, 15] 
 }
 
 ### Return 
