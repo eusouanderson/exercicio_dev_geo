@@ -8,8 +8,16 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AnalysisBox: typeof import('./src/components/AnalysisBox.vue')['default']
+    ClearAnalysis: typeof import('./src/components/Controls/ClearAnalysis.vue')['default']
+    copy: typeof import('./src/components/MapView copy.vue')['default']
     HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
+    InteractionMode: typeof import('./src/components/Controls/InteractionMode.vue')['default']
+    MapContainer: typeof import('./src/components/MapContainer.vue')['default']
     MapControls: typeof import('./src/components/MapControls.vue')['default']
+    MapType: typeof import('./src/components/Controls/MapType.vue')['default']
     MapView: typeof import('./src/components/MapView.vue')['default']
+    PointsToggle: typeof import('./src/components/Controls/PointsToggle.vue')['default']
+    SearchBox: typeof import('./src/components/Controls/SearchBox.vue')['default']
   }
 }
