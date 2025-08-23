@@ -3,6 +3,7 @@
     <button
       @click="$emit('update', 'navigate')"
       :class="[
+        'h-10 px-3 py-2 flex items-center gap-2 rounded-md text-sm transition-colors duration-200',
         modelValue === 'navigate'
           ? 'bg-blue text-white'
           : 'backdrop-blur-sm hover:bg-blue-100 text-gray-700',

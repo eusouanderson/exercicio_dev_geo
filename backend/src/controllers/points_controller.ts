@@ -7,5 +7,6 @@ export const listPoints = async (c: Context) => {
   const minCount = Number(c.req.query('minCount') || 0);
 
   const result = await getPoints(page, limit, minCount);
+  console.log(result);
   return c.json(result);
 };

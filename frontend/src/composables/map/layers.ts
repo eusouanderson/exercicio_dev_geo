@@ -2,8 +2,7 @@ import type { DataFilter } from "@/types/map";
 import * as L from "leaflet";
 import type { Ref } from "vue";
 
-// tipagem para as variáveis de layers
-
+// Tipagem para as variáveis de layers
 export interface MapLayers {
   pointsLayer: L.MarkerClusterGroup;
   customLayer: L.LayerGroup;
@@ -13,15 +12,20 @@ export interface MapLayers {
 }
 
 /**
- * inicializa todos os layers do mapa
+ * Inicializa todos os layers do mapa
  */
 export function initializeLayers(map: L.Map): MapLayers {
+  if (!map) {
+    throw new Error("Mapa não está inicializado.");
+  }
+
   const drawnItems = new L.FeatureGroup().addTo(map);
+
   const layers: MapLayers = {
     pointsLayer: L.markerClusterGroup(),
     customLayer: L.layerGroup().addTo(map),
     savedPolygonsLayer: new L.FeatureGroup().addTo(map),
-    drawnItems: drawnItems,
+    drawnItems,
     tileLayer: L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
@@ -32,32 +36,42 @@ export function initializeLayers(map: L.Map): MapLayers {
     ).addTo(map),
   };
 
+  // Overlay layers no controle
   const overlayLayers = {
     "Meus Pins": layers.customLayer,
     "Pontos de Análise": layers.pointsLayer,
     "Áreas Salvas": layers.savedPolygonsLayer,
   };
+
   L.control
     .layers(undefined, overlayLayers, { position: "topright" })
     .addTo(map);
-  map.addLayer(layers.pointsLayer);
+
+  // Garantir que o cluster layer seja adicionado ao mapa
+  if (!map.hasLayer(layers.pointsLayer)) {
+    map.addLayer(layers.pointsLayer);
+  }
 
   return layers;
 }
 
 /**
- * atualiza o layer de pontos com base nos filtros e dados atuais.
+ * Atualiza o layer de pontos com base nos filtros e dados atuais.
  */
 export function updatePointsLayer(
   pointsLayer: L.MarkerClusterGroup,
   allPointsData: Ref<any[]>,
   filter: Ref<DataFilter>
 ) {
+  if (!pointsLayer) return;
+
   pointsLayer.clearLayers();
+
   const filteredData = allPointsData.value.filter((feature) => {
-    const properties = feature.properties || {};
+    const properties = feature?.properties || {};
     if (
       filter.value.min_value !== null &&
+      typeof properties.value === "number" &&
       properties.value < filter.value.min_value
     ) {
       return false;
@@ -66,11 +80,17 @@ export function updatePointsLayer(
   });
 
   const markers = filteredData.map((feature: any) => {
-    const [lng, lat] = feature.geometry.coordinates;
-    const popupContent = Object.entries(feature.properties)
+    const [lng, lat] = feature.geometry?.coordinates || [0, 0];
+    const props = feature?.properties || {};
+
+    const popupContent = Object.entries(props)
       .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
       .join("<br>");
+
     return L.marker([lat, lng]).bindPopup(popupContent);
   });
-  pointsLayer.addLayers(markers);
+
+  if (markers.length > 0) {
+    pointsLayer.addLayers(markers);
+  }
 }

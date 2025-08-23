@@ -1,5 +1,6 @@
 import { analyzePolygon } from "@/composables/map/analysis";
 import type { MapLayers } from "@/composables/map/layers";
+import { createCustomMarker } from "@/helpers/marker";
 import * as geoService from "@/services/geoService";
 import * as polygonService from "@/services/polygonService";
 import type { AnalysisResult } from "@/types/map";
@@ -22,23 +23,29 @@ interface EventHandlers {
  * configurando todos os event listeners para o mapa.
  */
 export function setupMapEventListeners({ map, layers, state }: EventHandlers) {
-  map.on("click", async (event: L.LeafletMouseEvent) => {
+  map.on("contextmenu", async (event: L.LeafletMouseEvent) => {
+    //contextmenu
     if (state.interactionMode.value === "navigate") {
       const { lat, lng } = event.latlng;
       try {
         await geoService.createGeoPoint({ lat, lon: lng });
+
         const geoData = await geoService.reverseGeo(lat, lng);
-        const popupContent = geoData.display_name || `Lat: ${lat}, Lon: ${lng}`;
-        L.marker([lat, lng])
-          .bindPopup(popupContent)
-          .addTo(layers.customLayer)
-          .openPopup();
+        const info = geoData.display_name || `Lat: ${lat}, Lon: ${lng}`;
+
+        const marker = createCustomMarker(lat, lng, info);
+        layers.customLayer.addLayer(marker);
+        marker.openPopup();
       } catch (err) {
         console.error("Erro ao adicionar novo pino:", err);
-        L.marker([lat, lng])
-          .bindPopup("Erro ao salvar ou buscar informações.")
-          .addTo(layers.customLayer)
-          .openPopup();
+
+        const marker = createCustomMarker(
+          lat,
+          lng,
+          "Erro ao salvar ou buscar informações."
+        );
+        layers.customLayer.addLayer(marker);
+        marker.openPopup();
       }
     }
   });
@@ -75,7 +82,6 @@ export function setupMapEventListeners({ map, layers, state }: EventHandlers) {
         const latlngs = layer.getLatLngs()[0] as L.LatLng[];
         const coordinates = latlngs.map((latlng) => [latlng.lat, latlng.lng]);
         await polygonService.createPolygon({ name, coordinates, pointsInside });
-
         const newPolygon = L.polygon(layer.getLatLngs(), {
           color: "#3388ff",
         }).bindPopup(`<b>${name}</b>`);

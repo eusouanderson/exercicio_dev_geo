@@ -1,15 +1,12 @@
+import type { SearchResult } from "@/types/map";
 import * as L from "leaflet";
-
 import "leaflet-draw";
-import "leaflet.markercluster";
-
 import "leaflet-draw/dist/leaflet.draw.css";
+import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet/dist/leaflet.css";
 import { onUnmounted, watch } from "vue";
-
-import type { SearchResult } from "@/types/map";
 import { setupLeafletIcons } from "./config";
 import { fetchAllPoints, loadPersistedPoints, loadSavedPolygons } from "./data";
 import { setupMapEventListeners } from "./events";
@@ -30,15 +27,17 @@ export function useMap(mapContainerId: string) {
       console.error(`Container com ID ${mapContainerId} não encontrado`);
       return;
     }
+
     if (state.map.value) state.map.value.remove();
 
     const leafletMap = L.map(mapContainerId, {
       minZoom: 4,
       maxZoom: 18,
     }).setView([-23.55052, -46.63331], 5);
+
     state.map.value = leafletMap;
 
-    layers = initializeLayers(leafletMap as L.Map);
+    layers = initializeLayers(leafletMap);
 
     drawControl = new L.Control.Draw({
       edit: { featureGroup: layers.drawnItems },
@@ -53,7 +52,27 @@ export function useMap(mapContainerId: string) {
     });
     leafletMap.addControl(drawControl);
 
-    setupMapEventListeners({ map: leafletMap as L.Map, layers, state });
+    setupMapEventListeners({ map: leafletMap, layers, state });
+
+    leafletMap.on("moveend zoomend", async () => {
+      const bounds = leafletMap.getBounds();
+
+      await fetchAllPoints(
+        state.allPointsData,
+        leafletMap,
+        () =>
+          updatePointsLayer(
+            layers.pointsLayer,
+            state.allPointsData,
+            state.filter
+          ),
+        bounds
+      );
+
+      layers.savedPolygonsLayer.clearLayers();
+      await loadSavedPolygons(layers.savedPolygonsLayer, bounds);
+    });
+
     state.isMapInitialized.value = true;
   };
 
@@ -66,10 +85,19 @@ export function useMap(mapContainerId: string) {
   const setInteractionMode = (mode: "navigate" | "draw") => {
     state.interactionMode.value = mode;
     if (!state.map.value) return;
-    mode === "draw"
-      ? state.map.value.dragging.disable()
-      : state.map.value.dragging.enable();
+    if (mode === "draw") {
+      state.map.value.dragging.disable();
+      if (drawControl && !(state.map.value as any).hasControl?.(drawControl)) {
+        state.map.value.addControl(drawControl);
+      }
+    } else {
+      state.map.value.dragging.enable();
+      if (drawControl) {
+        state.map.value.removeControl(drawControl);
+      }
+    }
   };
+
   const togglePoints = () => {
     if (!state.map.value || !layers?.pointsLayer) return;
     if (state.map.value.hasLayer(layers.pointsLayer)) {

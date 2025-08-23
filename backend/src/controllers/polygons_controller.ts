@@ -14,7 +14,6 @@ app.post('/', async (c) => {
 
 app.get('/', async (c) => {
   const polygons = await polygonsRepository.findAll();
-  console.log('Get polygons enviado ', polygons);
   return c.json(polygons);
 });
 

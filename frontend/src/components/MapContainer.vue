@@ -25,13 +25,13 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { useMap } from "@/composables/map/index";
-import SearchBox from "./Controls/SearchBox.vue";
-import InteractionMode from "./Controls/InteractionMode.vue";
-import MapType from "./Controls/MapType.vue";
-import PointsToggle from "./Controls/PointsToggle.vue";
-import ClearAnalysis from "./Controls/ClearAnalysis.vue";
-import AnalysisBox from "./AnalysisBox.vue";
-import MapView from "./MapView.vue";
+import SearchBox from "@/components/Controls/SearchBox.vue";
+import InteractionMode from "@/components/Controls/InteractionMode.vue";
+import MapType from "@/components/Controls/MapType.vue";
+import PointsToggle from "@/components/Controls/PointsToggle.vue";
+import ClearAnalysis from "@/components/Controls/ClearAnalysis.vue";
+import AnalysisBox from "@/components/AnalysisBox.vue";
+import MapView from "@/components/MapView.vue";
 
 const {
   showPoints,

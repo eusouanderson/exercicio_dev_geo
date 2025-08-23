@@ -2,29 +2,27 @@
   <div class="flex rounded-md overflow-hidden border">
     <button
       @click="$emit('update', 'roadmap')"
-      :class="[
+      class="h-10 px-3 text-sm flex items-center gap-2 transition-colors duration-200 border-r border-gray-300"
+      :class="
         modelValue === 'roadmap'
           ? 'bg-blue text-white'
-          : 'backdrop-blur-sm hover:bg-blue-100 text-gray-700',
-        'px-3 py-1.5 border-r border-gray-300 transition-colors duration-200',
-      ]"
-      title="Tipo do Mapa"
+          : 'bg-zinc-600 hover:bg-blue-100 text-gray-700'
+      "
     >
-      <span class="material-icons text-sm">map</span>
+      <span class="material-icons text-base">map</span>
       Mapa
     </button>
 
     <button
       @click="$emit('update', 'satellite')"
-      :class="[
+      class="h-10 px-3 text-sm flex items-center gap-2 transition-colors duration-200"
+      :class="
         modelValue === 'satellite'
           ? 'bg-blue text-white'
-          : 'backdrop-blur-sm hover:bg-blue-100 text-gray-700',
-        'px-3 py-1.5 transition-colors duration-200',
-      ]"
-      title="Tipo do Mapa"
+          : 'bg-zinc-600 hover:bg-blue-100 text-gray-700'
+      "
     >
-      <span class="material-icons text-sm">satellite</span>
+      <span class="material-icons text-base">satellite</span>
       Satélite
     </button>
   </div>
