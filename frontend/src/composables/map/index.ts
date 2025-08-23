@@ -8,7 +8,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet/dist/leaflet.css";
 import { onUnmounted, watch } from "vue";
 import { setupLeafletIcons } from "./config";
-import { fetchAllPoints, loadPersistedPoints, loadSavedPolygons } from "./data";
+import { fetchAllPoints, loadSavedPolygons } from "./data";
 import { setupMapEventListeners } from "./events";
 import { initializeLayers, updatePointsLayer, type MapLayers } from "./layers";
 import { flyToLocation, searchLocation } from "./search";
@@ -149,7 +149,7 @@ export function useMap(mapContainerId: string) {
         state.map.value as L.Map,
         localUpdatePointsLayer
       );
-      await loadPersistedPoints(layers.customLayer);
+      //await loadPersistedPoints(layers.customLayer);
       await loadSavedPolygons(layers.savedPolygonsLayer);
     }
   };

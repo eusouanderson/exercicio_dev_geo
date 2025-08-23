@@ -1,6 +1,5 @@
 import { polygonsRepository } from '@/repository/polygons_repository';
 
-//cálculo de métricas (total, soma, média, mediana)
 export const polygonsService = {
   createPolygon: async (data: { name: string; coordinates: any; pointsInside?: number[] }) => {
     const metrics = data.pointsInside ? calculateMetrics(data.pointsInside) : {};
@@ -12,7 +11,6 @@ export const polygonsService = {
   },
 };
 
-//métricas
 const calculateMetrics = (values: number[]) => {
   const totalPoints = values.length;
   const sum = values.reduce((a, b) => a + b, 0);
