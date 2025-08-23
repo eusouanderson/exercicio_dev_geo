@@ -16,3 +16,20 @@ export interface SearchResult {
   boundingbox: [string, string, string, string];
   type: string;
 }
+
+export interface PersistedAnalysis extends AnalysisResult {
+  id: number;
+  name: string;
+}
+
+export interface SavedPolygon {
+  id: number;
+  name: string;
+  coordinates: string;
+  properties: {
+    totalPoints: number;
+    sum: number;
+    average: number | null;
+    median: number | null;
+  };
+}

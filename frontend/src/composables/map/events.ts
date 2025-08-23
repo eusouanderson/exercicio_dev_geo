@@ -1,51 +1,33 @@
 import { analyzePolygon } from "@/composables/map/analysis";
-import { formatDisplayName } from "@/composables/map/data";
+import { createPopupContentHtml } from "@/composables/map/config";
 import type { MapLayers } from "@/composables/map/layers";
 import { createCustomMarker } from "@/helpers/marker";
 import * as geoService from "@/services/geoService";
 import * as polygonService from "@/services/polygonService";
-import type { Info } from "@/types/geo";
-import type { AnalysisResult } from "@/types/map";
+import type {
+  AnalysisResult,
+  PersistedAnalysis,
+  SavedPolygon,
+} from "@/types/map";
 import type { Feature, Polygon } from "geojson";
 import * as L from "leaflet";
 import "leaflet-draw";
 import type { Ref } from "vue";
 
-interface EventHandlers {
+export interface EventHandlers {
   map: L.Map;
   layers: MapLayers;
   state: {
     interactionMode: Ref<"navigate" | "draw">;
     allPointsData: Ref<any[]>;
     analysisResult: Ref<AnalysisResult | null>;
+    analysisResults: Ref<PersistedAnalysis[]>;
   };
-}
-
-function createPopupContentHtml(info: Info): string {
-  const title = formatDisplayName(info);
-
-  const lat = parseFloat(info.lat || "0").toFixed(6);
-  const lon = parseFloat(info.lon || "0").toFixed(6);
-  const country = info.address?.country || "N/A";
-  const state = info.address?.state || "N/A";
-  const type = info.type || "N/A";
-
-  return `
-    <div style="font-family: sans-serif; font-size: 14px; max-width: 280px;">
-      <h3 style="margin: 0 0 10px 0; font-size: 16px;">${title}</h3>
-      <hr style="border: 0; border-top: 1px solid #ccc; margin: 10px 0;">
-      <p style="margin: 5px 0;"><strong>País:</strong> ${country}</p>
-      <p style="margin: 5px 0;"><strong>Estado:</strong> ${state}</p>
-      <p style="margin: 5px 0;"><strong>Tipo:</strong> ${type}</p>
-      <p style="margin: 5px 0; font-size: 12px; color: #555;">
-        <strong>Coords:</strong> ${lat}, ${lon}
-      </p>
-    </div>
-  `;
 }
 
 /**
  * configurando todos os event listeners para o mapa.
+ * contextmenu
  */
 export function setupMapEventListeners({ map, layers, state }: EventHandlers) {
   map.on("contextmenu", async (event: L.LeafletMouseEvent) => {
@@ -53,20 +35,10 @@ export function setupMapEventListeners({ map, layers, state }: EventHandlers) {
       const { lat, lng } = event.latlng;
 
       try {
-        // 1. Salva o ponto no banco de dados
-        // A resposta de createGeoPoint pode já conter os dados que você precisa
         const newPoint = await geoService.createGeoPoint({ lat, lon: lng });
-
-        // 2. Se a criação não retornar os detalhes, busca com o reverseGeo.
-        // Assumindo que a resposta de createGeoPoint já tem a estrutura completa,
-        // podemos usar newPoint.info diretamente.
         const infoData =
           newPoint.info || (await geoService.reverseGeo(lat, lng));
-
-        // 3. Gera o HTML do popup usando a nova função
         const popupContent = createPopupContentHtml(infoData);
-
-        // 4. Cria e adiciona o marcador ao mapa
         const marker = createCustomMarker(lat, lng, popupContent);
         layers.customLayer.addLayer(marker);
         marker.openPopup();
@@ -83,13 +55,12 @@ export function setupMapEventListeners({ map, layers, state }: EventHandlers) {
     }
   });
 
-  //evento de criação de polígono
+  //evento de criação de polígono PRECISO COLOCAR A RESPOSTA DA ANALISE COM IA AQUI
   map.on(L.Draw.Event.CREATED, async (event) => {
     const layer = (event as L.DrawEvents.Created).layer as L.Polygon;
     layers.drawnItems.addLayer(layer);
 
     const geojson = layer.toGeoJSON() as Feature<Polygon>;
-
     const { pointsInside, analysis } = analyzePolygon(
       geojson,
       state.allPointsData.value
@@ -99,10 +70,10 @@ export function setupMapEventListeners({ map, layers, state }: EventHandlers) {
     layer
       .bindPopup(
         `<h4>Análise da Área</h4>
-         <strong>Total de Pontos:</strong> ${analysis.totalPoints}<br>
-         <strong>Soma:</strong> ${analysis.sum}<br>
-         <strong>Média:</strong> ${analysis.mean}<br>
-         <strong>Mediana:</strong> ${analysis.median}`
+     <strong>Total de Pontos:</strong> ${analysis.totalPoints}<br>
+     <strong>Soma:</strong> ${analysis.sum}<br>
+     <strong>Média:</strong> ${analysis.mean}<br>
+     <strong>Mediana:</strong> ${analysis.median}`
       )
       .openPopup();
 
@@ -110,15 +81,50 @@ export function setupMapEventListeners({ map, layers, state }: EventHandlers) {
       "Digite um nome para este polígono:",
       "Nova Área de Análise"
     );
+
     if (name) {
       try {
         const latlngs = layer.getLatLngs()[0] as L.LatLng[];
         const coordinates = latlngs.map((latlng) => [latlng.lat, latlng.lng]);
+
         await polygonService.createPolygon({ name, coordinates, pointsInside });
-        const newPolygon = L.polygon(layer.getLatLngs(), {
-          color: "#3388ff",
-        }).bindPopup(`<b>${name}</b>`);
-        layers.savedPolygonsLayer.addLayer(newPolygon);
+
+        // 🔥 Busca todos os polígonos persistidos
+        const listAnalysis: SavedPolygon[] =
+          await polygonService.listPolygons();
+
+        // Atualiza estado (para usar em uma lista lateral, tabela, etc.)
+        state.analysisResults.value = listAnalysis.map((p) => ({
+          id: p.id,
+          name: p.name,
+          totalPoints: p.properties.totalPoints,
+          sum: p.properties.sum,
+          mean: p.properties.average ?? 0,
+          median: p.properties.median ?? 0,
+        }));
+
+        // Limpa camada de polígonos salvos e redesenha todos
+        layers.savedPolygonsLayer.clearLayers();
+
+        listAnalysis.forEach((poly) => {
+          const coords: [number, number][] = JSON.parse(poly.coordinates);
+
+          const leafletPolygon = L.polygon(
+            coords.map(([lat, lng]) => [lat, lng]),
+            {
+              color: "#3388ff",
+            }
+          ).bindPopup(
+            `<h4>${poly.name}</h4>
+           <strong>Total de Pontos:</strong> ${poly.properties.totalPoints}<br>
+           <strong>Soma:</strong> ${poly.properties.sum}<br>
+           <strong>Média:</strong> ${poly.properties.average ?? 0}<br>
+           <strong>Mediana:</strong> ${poly.properties.median ?? 0}`
+          );
+
+          layers.savedPolygonsLayer.addLayer(leafletPolygon);
+        });
+
         layers.drawnItems.clearLayers();
         state.analysisResult.value = null;
       } catch (error) {
@@ -130,6 +136,6 @@ export function setupMapEventListeners({ map, layers, state }: EventHandlers) {
 
   map.on("draw:drawstart", () => {
     layers.drawnItems.clearLayers();
-    state.analysisResult.value = null;
+    //state.analysisResult.value = null;
   });
 }

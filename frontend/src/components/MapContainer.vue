@@ -11,7 +11,7 @@
       />
       <MapType :modelValue="mapType" @update="setMapType" />
       <PointsToggle :modelValue="showPoints" @toggle="togglePoints" />
-      <ClearAnalysis :visible="!!analysisResult" @clear="clearAnalysis" />
+      <!--<ClearAnalysis :visible="false" @clear="clearAnalysis" />-->
     </div>
 
     <MapView />

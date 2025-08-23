@@ -1,62 +1,13 @@
+import { formatDisplayName } from "@/composables/map/config";
 import { createCustomMarker } from "@/helpers/marker";
 import * as geoService from "@/services/geoService";
 import { getPoints } from "@/services/pointsService";
 import * as polygonService from "@/services/polygonService";
+import type { GeoPoint } from "@/types/geo";
 import * as L from "leaflet";
 
-// Interfaces para tipagem forte
-interface Address {
-  town?: string;
-  state?: string;
-  region?: string;
-  country?: string;
-  postcode?: string;
-  country_code?: string;
-  municipality?: string;
-  city_district?: string;
-  ISO3166_2_lvl4?: string;
-  state_district?: string;
-}
-
-interface Info {
-  address?: Address;
-  display_name?: string;
-}
-
-interface GeoPoint {
-  lat: string;
-  lon: string;
-  info: Info;
-}
-
 /**
- * Formata um nome de exibição a partir das informações de endereço.
- * Remove valores vazios e duplicados para criar uma string limpa.
- */
-export function formatDisplayName(info: Info): string {
-  // Se não houver 'info' ou 'info.address', usa o display_name padrão ou uma string vazia.
-  if (!info || !info.address) {
-    return info?.display_name || "";
-  }
-
-  const { address } = info;
-  const parts = [
-    address.city_district,
-    address.town,
-    address.municipality,
-    address.state_district,
-    address.state,
-    address.region,
-    address.postcode,
-    address.country,
-  ];
-
-  // Filtra partes nulas/vazias, remove duplicatas com Set e junta com ", "
-  return Array.from(new Set(parts.filter(Boolean))).join(", ");
-}
-
-/**
- * Busca os pontos de análise e os adiciona ao mapa.
+ * busca os pontos de análise e os adiciona ao mapa.
  */
 export async function fetchAllPoints(
   allPointsData: { value: any[] },
@@ -85,7 +36,7 @@ export async function fetchAllPoints(
           properties: {
             latitude: lat,
             longitude: lon,
-            displayName: formatDisplayName(p.info), // Usando a função
+            displayName: formatDisplayName(p.info),
             address: p.info.address || {},
           },
           geometry: {
@@ -112,7 +63,7 @@ export async function fetchAllPoints(
 }
 
 /**
- * Carrega os pins salvos pelo usuário, usando a mesma formatação de nome.
+ * carrega os pins salvos pelo usuário, usando a mesma formatação de nome.
  */
 export const loadPersistedPoints = async (customLayer: L.LayerGroup) => {
   try {
@@ -134,7 +85,7 @@ export const loadPersistedPoints = async (customLayer: L.LayerGroup) => {
 };
 
 /**
- * Carrega os polígonos salvos.
+ * carrega os polígonos salvos.
  */
 export async function loadSavedPolygons(
   savedPolygonsLayer: L.FeatureGroup,

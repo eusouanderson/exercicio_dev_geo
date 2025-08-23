@@ -1,0 +1,11 @@
+@baseURL = http://localhost:3002
+@testTOKEN = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+
+### Enviar prompt para Gemini
+POST {{baseURL}}/api/gemini
+Authorization: {{testTOKEN}}
+Content-Type: application/json
+
+{
+  "prompt": "Liste os 5 maiores rios do Brasil."
+}

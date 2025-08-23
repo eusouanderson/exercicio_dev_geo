@@ -1,5 +1,3 @@
-// src/types/geo.ts
-
 export interface Address {
   town?: string;
   state?: string;
@@ -9,8 +7,8 @@ export interface Address {
   country_code?: string;
   municipality?: string;
   city_district?: string;
-  // Adicione outros campos que possam existir, como 'ISO3166-2-lvl4'
-  [key: string]: any;
+  ISO3166_2_lvl4?: string;
+  state_district?: string;
 }
 
 export interface Info {

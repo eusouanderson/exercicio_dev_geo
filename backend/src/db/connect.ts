@@ -1,6 +1,6 @@
 import { geoPoints } from '@/db/schemas/geo';
+import { points } from '@/db/schemas/points';
 import { polygons } from '@/db/schemas/polygon';
-//import { points } from '@/db/schemas/points'
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
@@ -12,6 +12,7 @@ export const db = drizzle(pool, {
   schema: {
     geoPoints,
     polygons,
+    points,
   },
 });
 
