@@ -5,7 +5,7 @@ import { Context } from 'hono';
 
 export const listPoints = async (c: Context) => {
   const page = Math.max(Number(c.req.query('page') || 1), 1);
-  const limit = Math.max(Number(c.req.query('limit') || 1000), 1);
+  const limit = Math.max(Number(c.req.query('limit') || 2000), 1);
   const minCount = Number(c.req.query('minCount') || 0);
 
   const apiResult = await getPoints(page, limit, minCount);
