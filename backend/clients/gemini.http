@@ -1,11 +1,52 @@
-@baseURL = http://localhost:3002
+@baseURL = http://localhost:3002/api
 @testTOKEN = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
-### Enviar prompt para Gemini
-POST {{baseURL}}/api/gemini
+# -------------------------------
+# 1️⃣ Enviar prompt para Gemini
+# -------------------------------
+POST {{baseURL}}/gemini
 Authorization: {{testTOKEN}}
 Content-Type: application/json
 
 {
-  "prompt": "Liste os 5 maiores rios do Brasil."
+  "prompt": "Qual o meu nome?"
 }
+
+###
+
+# -------------------------------
+
+# -------------------------------
+GET {{baseURL}}/gemini/results
+Authorization: {{testTOKEN}}
+
+###
+
+
+
+# Substitua :id pelo ID real retornado no POST
+
+GET {{baseURL}}/gemini/results/:id
+Authorization: {{testTOKEN}}
+
+###
+
+
+
+
+PUT {{baseURL}}/gemini/results/1
+Authorization: {{testTOKEN}}
+Content-Type: application/json
+
+{
+  "result": "Resposta atualizada para teste"
+}
+
+###
+
+# -------------------------------
+# 5️⃣ Deletar resultado por ID
+# -------------------------------
+DELETE {{baseURL}}/gemini/results/:id
+Authorization: {{testTOKEN}}
+

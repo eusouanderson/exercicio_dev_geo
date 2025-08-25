@@ -9,6 +9,7 @@ import * as L from "leaflet";
 /**
  * busca os pontos de análise e os adiciona ao mapa.
  */
+
 export async function fetchAllPoints(
   allPointsData: { value: any[] },
   map: L.Map,
@@ -56,7 +57,6 @@ export async function fetchAllPoints(
 
     allPointsData.value = features;
     updatePointsLayerFn();
-    console.log("Total de pontos carregados:", features.length);
   } catch (err) {
     console.error("Erro ao carregar pontos de análise:", err);
   }

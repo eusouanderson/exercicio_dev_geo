@@ -1,14 +1,15 @@
 @baseURL = http://localhost:3002
-@testTOKEN=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+@testTOKEN = Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
 
 ### Health
 GET {{baseURL}}
-
+### Return
+# {"status":"ok"}
 
 ### Polygons - List all
 GET {{baseURL}}/api/polygons
-Authorization:@{{testTOKEN}}
-### Return 
+Authorization: @{{testTOKEN}}
+### Return
 # [
 #   {
 #     "id": 1,
@@ -20,17 +21,13 @@ Authorization:@{{testTOKEN}}
 #       "average": 10,
 #       "median": 10
 #     }
-#   },
-#   {
-#     "id": 2,
-
+#   }
+# ]
 
 ### Polygons - Get by ID
-GET {{baseURL}}/api/polygons/1
-Authorization:@{{testTOKEN}}
-
+GET {{baseURL}}/api/polygons/58
+Authorization: @{{testTOKEN}}
 ### Return
-
 # {
 #   "id": 1,
 #   "name": "Meu Polígono",
@@ -45,52 +42,48 @@ Authorization:@{{testTOKEN}}
 
 ### Polygons - Create
 POST {{baseURL}}/api/polygons
+Authorization: @{{testTOKEN}}
 Content-Type: application/json
-Authorization:@{{testTOKEN}}
 
 {
   "name": "Meu Polígono",
   "coordinates": [
-    [ -46.63331, -23.55052 ],
-    [ -46.63400, -23.55050 ],
-    [ -46.63350, -23.55100 ]
+    [-46.63331, -23.55052],
+    [-46.63400, -23.55050],
+    [-46.63350, -23.55100]
   ],
-  "pointsInside": [5, 5, 15] 
+  "pointsInside": [5, 5, 15]
 }
-
-### Return 
+### Return
 # {
-#   "id": 8,
+#   "id": 2,
 #   "name": "Meu Polígono",
 #   "coordinates": "[[-46.63331,-23.55052],[-46.634,-23.5505],[-46.6335,-23.551]]",
 #   "properties": {
 #     "totalPoints": 3,
-#     "sum": 30,
-#     "average": 10,
-#     "median": 10
+#     "sum": 25,
+#     "average": 8.33,
+#     "median": 5
 #   }
 # }
 
-### Polygons - Update
-PUT {{baseURL}}/api/polygons/4
+PUT {{baseURL}}/api/polygons/120
+Authorization: @{{testTOKEN}}
 Content-Type: application/json
-Authorization:@{{testTOKEN}}
 
 {
   "name": "Polígono Atualizado",
   "coordinates": [
-    [ -46.63331, -23.55052 ],
-    [ -46.63450, -23.55000 ],
-    [ -46.63370, -23.55120 ]
+    [-46.63331, -23.55052],
+    [-46.63450, -23.55000],
+    [-46.63370, -23.55120]
   ],
   "pointsInside": [7, 8, 12]
 }
 
-### Return 
-
-
+### Return
 # {
-#   "id": 1,
+#   "id": 2,
 #   "name": "Polígono Atualizado",
 #   "coordinates": "[[-46.63331,-23.55052],[-46.6345,-23.55],[-46.6337,-23.5512]]",
 #   "properties": {
@@ -102,5 +95,7 @@ Authorization:@{{testTOKEN}}
 # }
 
 ### Polygons - Delete
-DELETE {{baseURL}}/api/polygons/4
-Authorization:@{{testTOKEN}}
+DELETE {{baseURL}}/api/polygons/120
+Authorization: @{{testTOKEN}}
+### Return
+# { "success": true }

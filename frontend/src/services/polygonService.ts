@@ -1,21 +1,18 @@
 import { apiFetch } from "./api";
 
 export const listPolygons = async () => {
-  return apiFetch("/api/polygons", {
-    method: "GET",
-  });
+  return apiFetch("/api/polygons", { method: "GET" });
 };
 
 export const getPolygon = async (id: number) => {
-  return apiFetch(`/api/polygons/${id}`, {
-    method: "GET",
-  });
+  return apiFetch(`/api/polygons/${id}`, { method: "GET" });
 };
 
 export const createPolygon = async (data: {
   name: string;
   coordinates: number[][];
   pointsInside: number[];
+  aiResult?: string;
 }) => {
   return apiFetch("/api/polygons", {
     method: "POST",
@@ -25,7 +22,12 @@ export const createPolygon = async (data: {
 
 export const updatePolygon = async (
   id: number,
-  data: { name: string; coordinates: number[][]; pointsInside: number[] }
+  data: {
+    name: string;
+    coordinates: number[][];
+    pointsInside: number[];
+    aiResult?: string;
+  }
 ) => {
   return apiFetch(`/api/polygons/${id}`, {
     method: "PUT",
@@ -34,7 +36,5 @@ export const updatePolygon = async (
 };
 
 export const deletePolygon = async (id: number) => {
-  return apiFetch(`/api/polygons/${id}`, {
-    method: "DELETE",
-  });
+  return apiFetch(`/api/polygons/${id}`, { method: "DELETE" });
 };

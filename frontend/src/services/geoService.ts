@@ -14,7 +14,7 @@ export const reverseGeo = async (lat: number, lon: number) => {
 };
 
 export const createGeoPoint = async (data: { lat: number; lon: number }) => {
-  return apiFetch(`/api/geo/create`, {
+  return apiFetch(`/api/geo`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

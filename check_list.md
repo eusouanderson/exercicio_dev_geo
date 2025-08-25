@@ -10,12 +10,12 @@
 ### 2. Utilização das Bases de Dados
 
 - [x] Adicionar pontos ao mapa a partir dos arquivos na pasta `files`.
-- [ ] Configurar eventos para exibir `censo_2022_domicilio_particular_poi_counts` ao clicar ou passar o mouse sobre os marcadores.
+- [x] Configurar eventos para exibir `censo_2022_domicilio_particular_poi_counts` ao clicar ou passar o mouse sobre os marcadores.
 
 ### 3. Implementação do Mapa
 
 - [x] Exibir mapa com (Leaflet) .
-- [ ] Permitir desenhar polígonos no mapa.
+- [x] Permitir desenhar polígonos no mapa.
 - [ ] Calcular e exibir operações sobre a área demarcada:
   - [ ] Total de pontos
   - [ ] Soma
@@ -24,10 +24,9 @@
 
 ### 4. Integração com API OpenStreetMap
 
-- [ ] Permitir que o usuário adicione pinos clicando no mapa.
-- [ ] Consultar API OpenStreetMap usando as coordenadas do pino.
-- [ ] Persistir e exibir informações retornadas ao interagir com o pino.
-- [ ] Testar exemplo:
+- [x] Permitir que o usuário adicione pinos clicando no mapa.
+- [x] Consultar API OpenStreetMap usando as coordenadas do pino.
+- [x] Persistir e exibir informações retornadas ao interagir com o pino.
 
 ```json
 {

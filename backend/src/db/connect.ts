@@ -1,6 +1,8 @@
+import { aiResults } from '@/db/schemas/gemini';
 import { geoPoints } from '@/db/schemas/geo';
 import { points } from '@/db/schemas/points';
 import { polygons } from '@/db/schemas/polygon';
+
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 
@@ -13,6 +15,7 @@ export const db = drizzle(pool, {
     geoPoints,
     polygons,
     points,
+    aiResults,
   },
 });
 

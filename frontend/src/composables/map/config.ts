@@ -3,8 +3,9 @@ import * as L from "leaflet";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
 /**
- * corrige o problema com os ícones padrão do Leaflet em bundlers como o Vite/Webpack
+ * corrige os ícones padrão do Leaflet em bundlers como o Vite/Webpack
  */
 
 export function setupLeafletIcons() {

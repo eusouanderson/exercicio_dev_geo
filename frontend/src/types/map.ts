@@ -3,6 +3,30 @@ export interface AnalysisResult {
   sum: number;
   mean: number;
   median: number;
+  values: number[];
+}
+
+export interface PointData {
+  id: string | number;
+  lat: number;
+  lng: number;
+  value?: number;
+  valor?: number;
+  [key: string]: any;
+}
+
+export interface SavedPolygon {
+  id: string;
+  name: string;
+  coordinates: [number, number][];
+  properties: {
+    totalPoints: number;
+    sum: number;
+    average?: number;
+    median?: number;
+    aiResult?: string;
+    createdAt: string;
+  };
 }
 
 export interface DataFilter {
@@ -19,17 +43,7 @@ export interface SearchResult {
 
 export interface PersistedAnalysis extends AnalysisResult {
   id: number;
+  aiResult?: string;
   name: string;
-}
-
-export interface SavedPolygon {
-  id: number;
-  name: string;
-  coordinates: string;
-  properties: {
-    totalPoints: number;
-    sum: number;
-    average: number | null;
-    median: number | null;
-  };
+  additionalData?: any;
 }

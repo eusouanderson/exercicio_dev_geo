@@ -4,85 +4,27 @@
 ### Listar todos os pontos persistidos
 GET {{baseURL}}/api/geo
 Authorization: {{testTOKEN}}
-### return 
+### return
 # [
 #   {
 #     "lat": "40.748817",
 #     "lon": "-73.985428",
-#     "info": {
-#       "place_id": 333293950,
-#       "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
-#       "osm_type": "node",
-#       "osm_id": 11308423812,
-#       "lat": "40.7489855",
-#       "lon": "-73.9853975",
-#       "class": "shop",
-#       "type": "shoes",
-#       "place_rank": 30,
-#       "importance": 0.00009175936522464359,
-#       "addresstype": "shop",
-#       "name": "Naturalizer",
-#       "display_name": "Naturalizer, 7, West 34th Street, Midtown South, Manhattan Community Board 5, Manhattan, New York County, City of New York, New York, 10001, United States",
-#       "address": {
-#         "shop": "Naturalizer",
-#         "house_number": "7",
-#         "road": "West 34th Street",
-#         "neighbourhood": "Midtown South",
-#         "suburb": "Manhattan",
-#         "county": "New York County",
-#         "city": "City of New York",
-#         "state": "New York",
-#         "ISO3166-2-lvl4": "US-NY",
-#         "postcode": "10001",
-#         "country": "United States",
-#         "country_code": "us"
-#       },
-#       "boundingbox": [
-
+#     "info": { ... }
+#   }
+# ]
 
 ### Consulta de reverse geocoding para um ponto específico
 GET {{baseURL}}/api/geo/reverse?lat=40.748817&lon=-73.985428
 Authorization: {{testTOKEN}}
-### Return
-
+### return
 # {
-#   "place_id": 333293950,
-#   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
-#   "osm_type": "node",
-#   "osm_id": 11308423812,
 #   "lat": "40.7489855",
 #   "lon": "-73.9853975",
-#   "class": "shop",
-#   "type": "shoes",
-#   "place_rank": 30,
-#   "importance": 0.00009175936522464359,
-#   "addresstype": "shop",
-#   "name": "Naturalizer",
-#   "display_name": "Naturalizer, 7, West 34th Street, Midtown South, Manhattan Community Board 5, Manhattan, New York County, City of New York, New York, 10001, United States",
-#   "address": {
-#     "shop": "Naturalizer",
-#     "house_number": "7",
-#     "road": "West 34th Street",
-#     "neighbourhood": "Midtown South",
-#     "suburb": "Manhattan",
-#     "county": "New York County",
-#     "city": "City of New York",
-#     "state": "New York",
-#     "ISO3166-2-lvl4": "US-NY",
-#     "postcode": "10001",
-#     "country": "United States",
-#     "country_code": "us"
-#   },
-#   "boundingbox": [
-#     "40.7489355",
-#     "40.7490355",
-#     "-73.9854475",
-#     "-73.9853475"
-#   ]
+#   "info": { ... }
 # }
 
 ### Criar um novo ponto geográfico
-POST {{baseURL}}/api/geo/create
+POST {{baseURL}}/api/geo
 Authorization: {{testTOKEN}}
 Content-Type: application/json
 
@@ -90,3 +32,21 @@ Content-Type: application/json
   "lat": 40.7128,
   "lon": -74.0060
 }
+
+### Buscar ponto geográfico por ID
+GET {{baseURL}}/api/geo/468
+Authorization: {{testTOKEN}}
+
+### Atualizar ponto geográfico por ID
+PUT {{baseURL}}/api/geo/467
+Authorization: {{testTOKEN}}
+Content-Type: application/json
+
+{
+  "lat": 40.73061,
+  "lon": -73.935242
+}
+
+### Deletar ponto geográfico por ID
+DELETE {{baseURL}}/api/geo/467
+Authorization: {{testTOKEN}}

@@ -38,8 +38,8 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
   }
 
   const url = `${API_BASE_URL}${endpoint}`;
-  console.log("API Fetch -> URL:", url);
-  console.log("API Fetch -> Headers:", Object.fromEntries(headers.entries()));
+  // console.log("API Fetch -> URL:", url);
+  // console.log("API Fetch -> Headers:", Object.fromEntries(headers.entries()));
 
   const response = await fetch(url, {
     ...options,

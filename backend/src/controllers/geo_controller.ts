@@ -62,3 +62,43 @@ export const reverseGeocode = async (c: Context) => {
     return c.json({ message: 'Erro no serviço de geocoding reverso', error: error.message }, 500);
   }
 };
+
+export const getGeoPointById = async (c: Context) => {
+  try {
+    const id = Number(c.req.param('id'));
+    const point = await geoRepository.findGeoPointById(id);
+    if (!point) return c.json({ message: 'Ponto não encontrado' }, 404);
+    return c.json(point, 200);
+  } catch (error: any) {
+    console.error('Erro ao buscar ponto por ID:', error);
+    return c.json({ message: 'Erro ao buscar ponto', error: error.message }, 500);
+  }
+};
+
+export const updateGeoPointController = async (c: Context) => {
+  try {
+    const id = Number(c.req.param('id'));
+    const body: Partial<NewGeoPoint> = await c.req.json();
+
+    const updated = await geoRepository.updateGeoPoint(id, body);
+    if (!updated) return c.json({ message: 'Ponto não encontrado' }, 404);
+
+    return c.json(updated, 200);
+  } catch (error: any) {
+    console.error('Erro ao atualizar ponto:', error);
+    return c.json({ message: 'Erro ao atualizar ponto', error: error.message }, 500);
+  }
+};
+
+export const deleteGeoPointController = async (c: Context) => {
+  try {
+    const id = Number(c.req.param('id'));
+    const success = await geoRepository.deleteGeoPoint(id);
+    if (!success) return c.json({ message: 'Ponto não encontrado' }, 404);
+
+    return c.json({ success: true }, 200);
+  } catch (error: any) {
+    console.error('Erro ao deletar ponto:', error);
+    return c.json({ message: 'Erro ao deletar ponto', error: error.message }, 500);
+  }
+};

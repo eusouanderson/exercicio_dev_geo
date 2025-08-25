@@ -2,7 +2,6 @@ import type { DataFilter } from "@/types/map";
 import * as L from "leaflet";
 import type { Ref } from "vue";
 
-// Tipagem para as variáveis de layers
 export interface MapLayers {
   pointsLayer: L.MarkerClusterGroup;
   customLayer: L.LayerGroup;
@@ -11,9 +10,8 @@ export interface MapLayers {
   tileLayer: L.TileLayer;
 }
 
-/**
- * Inicializa todos os layers do mapa
- */
+// inicializa todos os layers do mapa
+
 export function initializeLayers(map: L.Map): MapLayers {
   if (!map) {
     throw new Error("Mapa não está inicializado.");
@@ -36,7 +34,6 @@ export function initializeLayers(map: L.Map): MapLayers {
     ).addTo(map),
   };
 
-  // Overlay layers no controle
   const overlayLayers = {
     "Meus Pins": layers.customLayer,
     "Pontos de Análise": layers.pointsLayer,
@@ -47,7 +44,6 @@ export function initializeLayers(map: L.Map): MapLayers {
     .layers(undefined, overlayLayers, { position: "topright" })
     .addTo(map);
 
-  // Garantir que o cluster layer seja adicionado ao mapa
   if (!map.hasLayer(layers.pointsLayer)) {
     map.addLayer(layers.pointsLayer);
   }
@@ -55,9 +51,6 @@ export function initializeLayers(map: L.Map): MapLayers {
   return layers;
 }
 
-/**
- * Atualiza o layer de pontos com base nos filtros e dados atuais.
- */
 export function updatePointsLayer(
   pointsLayer: L.MarkerClusterGroup,
   allPointsData: Ref<any[]>,

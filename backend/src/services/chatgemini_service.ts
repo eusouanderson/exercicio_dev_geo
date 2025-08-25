@@ -1,24 +1,5 @@
-interface GeminiResponse {
-  candidates?: {
-    content?: {
-      parts?: {
-        text?: string;
-      }[];
-      role?: string;
-    };
-    finishReason?: string;
-    index?: number;
-  }[];
-  usageMetadata?: {
-    promptTokenCount?: number;
-    candidatesTokenCount?: number;
-    totalTokenCount?: number;
-    promptTokensDetails?: { modality?: string; tokenCount?: number }[];
-    thoughtsTokenCount?: number;
-  };
-  modelVersion?: string;
-  responseId?: string;
-}
+import * as aiRepository from '@/repository/gemini_repository';
+import type { GeminiResponse } from '@/types/gemini';
 
 export async function analyzeGeographyPrompt(prompt: string): Promise<string> {
   try {
@@ -38,9 +19,37 @@ export async function analyzeGeographyPrompt(prompt: string): Promise<string> {
     }
 
     const data = (await res.json()) as GeminiResponse;
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    await aiRepository.createAIResult({
+      prompt,
+      result: resultText,
+      metadata: {
+        model: 'gemini-pro',
+        status: 'success',
+        rawResponse: data,
+      },
+    });
+
+    return resultText;
   } catch (err: any) {
     console.error('Erro ao chamar Gemini API:', err);
+
+    await aiRepository.createAIResult({
+      prompt,
+      result: '',
+      metadata: {
+        model: 'gemini-pro',
+        status: 'error',
+        errorMessage: err.message,
+      },
+    });
+
     return '';
   }
 }
+
+export const listResults = aiRepository.findAllAIResults;
+export const getResultById = aiRepository.findAIResultById;
+export const deleteResult = aiRepository.deleteAIResult;
+export const updateResult = aiRepository.updateAIResult;
