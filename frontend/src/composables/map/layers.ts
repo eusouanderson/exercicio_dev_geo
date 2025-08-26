@@ -1,4 +1,5 @@
 import type { DataFilter } from "@/types/map";
+
 import * as L from "leaflet";
 import type { Ref } from "vue";
 
@@ -9,8 +10,6 @@ export interface MapLayers {
   drawnItems: L.FeatureGroup;
   tileLayer: L.TileLayer;
 }
-
-// inicializa todos os layers do mapa
 
 export function initializeLayers(map: L.Map): MapLayers {
   if (!map) {

@@ -1,24 +1,22 @@
 import { formatDisplayName } from "@/composables/map/config";
-import { createCustomMarker } from "@/helpers/marker";
-import * as geoService from "@/services/geoService";
 import { getPoints } from "@/services/pointsService";
 import * as polygonService from "@/services/polygonService";
 import type { GeoPoint } from "@/types/geo";
+import type { PersistedAnalysis } from "@/types/map";
 import * as L from "leaflet";
+import type { Ref } from "vue";
 
 /**
  * busca os pontos de análise e os adiciona ao mapa.
  */
-
 export async function fetchAllPoints(
-  allPointsData: { value: any[] },
+  allPointsData: Ref<any[]>,
   map: L.Map,
   updatePointsLayerFn: () => void,
   bounds?: L.LatLngBounds
 ) {
   try {
-    const data = await getPoints(1, 1000);
-
+    const data = await getPoints(1, 500);
     if (!data) return;
 
     let features: any[] = [];
@@ -38,7 +36,6 @@ export async function fetchAllPoints(
             latitude: lat,
             longitude: lon,
             displayName: formatDisplayName(p.info),
-            address: p.info.address || {},
           },
           geometry: {
             type: "Point",
@@ -63,53 +60,63 @@ export async function fetchAllPoints(
 }
 
 /**
- * carrega os pins salvos pelo usuário, usando a mesma formatação de nome.
- */
-export const loadPersistedPoints = async (customLayer: L.LayerGroup) => {
-  try {
-    const persistedPoints = await geoService.listGeoPoints();
-
-    if (persistedPoints && Array.isArray(persistedPoints)) {
-      persistedPoints.forEach((point: GeoPoint) => {
-        const lat = parseFloat(point.lat);
-        const lon = parseFloat(point.lon);
-        // CORREÇÃO: Usando a mesma função para garantir consistência
-        const displayName = formatDisplayName(point.info);
-        const marker = createCustomMarker(lat, lon, displayName);
-        marker.addTo(customLayer);
-      });
-    }
-  } catch (error) {
-    console.error("Erro ao carregar pontos persistidos:", error);
-  }
-};
-
-/**
- * carrega os polígonos salvos.
+ * carrega os polígonos salvos e adiciona botão de apagar.
  */
 export async function loadSavedPolygons(
   savedPolygonsLayer: L.FeatureGroup,
+  state: { analysisResults: Ref<PersistedAnalysis[]> },
   bounds?: L.LatLngBounds
 ) {
   try {
     const polygons = await polygonService.listPolygons();
-    if (polygons && Array.isArray(polygons)) {
-      polygons.forEach((polygon: any) => {
-        const latlngs: L.LatLngTuple[] = JSON.parse(polygon.coordinates).map(
-          (coord: number[]) => [coord[0], coord[1]] as L.LatLngTuple
-        );
+    if (!polygons || !Array.isArray(polygons)) return;
 
-        const layer = L.polygon(latlngs, { color: "#3388ff" }).bindPopup(
-          `<b>${polygon.name}</b><br>Contém ${
-            polygon.pointsInside?.length || "N/A"
-          } pontos.`
-        );
+    polygons.forEach((polygon: any) => {
+      const latlngs: L.LatLngTuple[] = JSON.parse(polygon.coordinates).map(
+        (coord: number[]) => [coord[0], coord[1]] as L.LatLngTuple
+      );
 
-        if (!bounds || bounds.intersects(layer.getBounds())) {
-          savedPolygonsLayer.addLayer(layer);
+      // cria popup dinâmico
+      const popupContent = document.createElement("div");
+      popupContent.innerHTML = `<b>Nome salvo: ${polygon.name}</b>
+      `;
+
+      // botão Apagar
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Apagar";
+      deleteBtn.style.marginTop = "8px";
+      deleteBtn.style.padding = "5px 12px";
+      deleteBtn.style.backgroundColor = "#e74c3c";
+      deleteBtn.style.color = "#fff";
+      deleteBtn.style.border = "none";
+      deleteBtn.style.borderRadius = "5px";
+      deleteBtn.style.cursor = "pointer";
+      deleteBtn.style.fontWeight = "bold";
+      deleteBtn.style.boxShadow = "0 2px 5px rgba(0,0,0,0.3)";
+      deleteBtn.style.transition = "all 0.2s ease";
+      deleteBtn.onclick = async () => {
+        try {
+          await polygonService.deletePolygon(polygon.id);
+          savedPolygonsLayer.removeLayer(leafletPolygon);
+          state.analysisResults.value = state.analysisResults.value.filter(
+            (a) => a.id !== polygon.id
+          );
+          localStorage.removeItem(`analysis_${polygon.id}_additional`);
+        } catch (err) {
+          console.error("Erro ao deletar polígono:", err);
+          alert("Falha ao deletar polígono.");
         }
-      });
-    }
+      };
+      popupContent.appendChild(deleteBtn);
+
+      const leafletPolygon = L.polygon(latlngs, { color: "#3388ff" }).bindPopup(
+        popupContent
+      );
+
+      if (!bounds || bounds.intersects(leafletPolygon.getBounds())) {
+        savedPolygonsLayer.addLayer(leafletPolygon);
+      }
+    });
   } catch (error) {
     console.error("Erro ao carregar polígonos salvos:", error);
   }

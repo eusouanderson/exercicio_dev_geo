@@ -1,20 +1,21 @@
-import { loadPointsData } from '@/utils/csv_loader';
+import { db } from '@/db/connect';
+import { points } from '@/db/schemas/points';
+import { sql } from 'drizzle-orm';
 
-export const getPoints = async (page: number, limit: number, minCount: number) => {
-  const pointsData = await loadPointsData();
+export const getPoints = async (page = 1, limit = 2000) => {
+  const offset = (page - 1) * limit;
 
-  let filtered = pointsData.features.filter(
-    (f: any) => f.properties.censo_2022_domicilio_particular_poi_counts >= minCount
-  );
+  const result = await db.select().from(points).limit(limit).offset(offset);
 
-  const start = (page - 1) * limit;
-  const end = start + limit;
-  const paged = filtered.slice(start, end);
+  const totalResult = await db.select({ total: sql`count(*)` }).from(points);
+  const total = totalResult[0]?.total ?? 0;
+
+  //console.log(`Total de pontos no banco:`, total);
 
   return {
     type: 'FeatureCollection',
-    features: paged,
-    total: filtered.length,
+    features: result,
+    total,
     page,
     limit,
   };

@@ -2,7 +2,7 @@
 
 ### 1. Configuração Inicial
 
-- [x] Escolher framework frontend ( Vuetfy ).
+- [x] Escolher framework frontend e backend ( Vuetfy, Hono).
 - [x] Configurar mapa (Leaflet ou Mapbox).
 - [x] Configurar servidor básico Node.js para servir a aplicação e processar chamadas à API.
 - [x] Configurar dependências necessárias (ex.: axios, express, dotenv, papaparse, etc.).
@@ -16,11 +16,8 @@
 
 - [x] Exibir mapa com (Leaflet) .
 - [x] Permitir desenhar polígonos no mapa.
-- [ ] Calcular e exibir operações sobre a área demarcada:
-  - [ ] Total de pontos
-  - [ ] Soma
-  - [ ] Média
-  - [ ] Mediana
+- [x] Calcular e exibir operações sobre a área demarcada:
+- [x] Análise com IA do Gemini da região marcada
 
 ### 4. Integração com API OpenStreetMap
 

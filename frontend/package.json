@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
@@ -14,6 +14,7 @@
     "@fontsource/roboto": "5.2.6",
     "@mdi/font": "7.4.47",
     "@tailwindcss/vite": "^4.1.12",
+    "@turf/turf": "^7.2.0",
     "@types/leaflet-draw": "^1.0.12",
     "@types/leaflet.markercluster": "^1.5.5",
     "@types/turf": "^3.5.32",

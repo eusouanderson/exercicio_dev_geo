@@ -4,7 +4,7 @@ export class NominatimService {
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Geo/1.0 (eusouanderson@exemplo.com)',
+        'User-Agent': 'Geo/1.0 (eusouanderson@outlook.com)',
       },
     });
 

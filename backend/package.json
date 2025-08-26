@@ -25,6 +25,7 @@
   "private": true,
   "scripts": {
     "db:cli": "docker exec -it my_postgres psql -U myuser -d mydatabase",
+    "populate": "bun run src/script/populate.ts",
     "image": "docker exec -it my_postgres bash",
     "push": "npx drizzle-kit push",
     "generate": "npx drizzle-kit generate",

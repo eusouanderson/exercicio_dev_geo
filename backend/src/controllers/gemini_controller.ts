@@ -4,7 +4,7 @@ import {
   getResultById,
   listResults,
   updateResult,
-} from '@/services/chatgemini_service';
+} from '@/services/gemini_service';
 import { Context } from 'hono';
 
 export async function geminiController(c: Context) {

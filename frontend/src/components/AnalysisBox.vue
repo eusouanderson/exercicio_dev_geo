@@ -2,7 +2,7 @@
   <div class="absolute bottom-4 left-4 z-[999] flex flex-col items-start gap-2">
     <button
       @click="isVisible = !isVisible"
-      class="bg-white shadow-lg rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all flex items-center gap-2"
+      class="shadow-lg rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all flex items-center gap-2"
     >
       <span class="material-icons text-lg">
         {{ isVisible ? "visibility_off" : "visibility" }}
@@ -43,7 +43,7 @@
 
       <div
         v-else-if="analyses.length === 0"
-        class="bg-white shadow-lg rounded-xl border border-gray-200 p-6 text-center"
+        class="shadow-lg rounded-xl border border-gray-200 p-6 text-center"
       >
         <span class="material-icons text-5xl text-gray-300 mb-2"
           >search_off</span
@@ -119,8 +119,7 @@ interface GeminiResult {
 
 const analyses = ref<GeminiResult[]>([]);
 const isLoading = ref(true);
-// NOVO: Estado para controlar a visibilidade da lista
-const isVisible = ref(true);
+const isVisible = ref(false);
 
 const fetchAnalyses = async () => {
   isLoading.value = true;

@@ -3,34 +3,169 @@ import type { AnalysisResult } from "@/types/map";
 import * as turf from "@turf/turf";
 import type { Feature, Point, Polygon } from "geojson";
 
-// Tipo dos pontos que vem do serviço
 type GeoPoint = {
   id: number;
   lat: string;
   lon: string;
-  info?: Record<string, any>;
+  info?: {
+    lat?: string;
+    lon?: string;
+    name?: string;
+    type?: string;
+    class?: string;
+    osm_id?: number;
+    address?: {
+      state?: string;
+      region?: string;
+      country?: string;
+      country_code?: string;
+      municipality?: string;
+      "ISO3166-2-lvl4"?: string;
+      state_district?: string;
+      [key: string]: any;
+    };
+    licence?: string;
+    osm_type?: string;
+    place_id?: number;
+    importance?: number;
+    place_rank?: number;
+    addresstype?: string;
+    boundingbox?: string[];
+    display_name?: string;
+    [key: string]: any;
+  };
   value?: number;
   valor?: number;
   createdAt?: string;
+  updatedAt?: string;
   [key: string]: any;
 };
 
-// Interface para dados adicionais
 interface AdditionalData {
-  censusData: Record<string, number>;
+  locationInfo: {
+    municipalities: string[];
+    states: string[];
+    regions: string[];
+    countries: string[];
+    displayNames: string[];
+    boundingBoxes: string[][];
+  };
   establishmentStats: {
     total: number;
     construction: number;
     otherPurposes: number;
-    [key: string]: number;
   };
   dwellingStats: {
     total: number;
     particular: number;
-    [key: string]: number;
   };
-  categorySummary: Record<string, number>;
-  allProperties: Record<string, number>;
+
+  demographicData: Record<string, number>;
+  infrastructureData: Record<string, number>;
+  environmentalData: Record<string, number>;
+}
+
+function extractAdditionalData(points: GeoPoint[]): AdditionalData {
+  const municipalitiesSet = new Set<string>();
+  const statesSet = new Set<string>();
+  const regionsSet = new Set<string>();
+  const countriesSet = new Set<string>();
+  const displayNamesSet = new Set<string>();
+  const boundingBoxes: string[][] = [];
+
+  let establishmentsTotal = 0;
+  let establishmentsConstruction = 0;
+  let establishmentsOtherPurposes = 0;
+
+  let dwellingsTotal = 0;
+  let dwellingsParticular = 0;
+
+  const establishmentTypes = new Set([
+    "establishment",
+    "industrial",
+    "commercial",
+    "retail",
+    "factory",
+    "warehouse",
+    "office",
+    "shop",
+    "amenity",
+  ]);
+
+  const dwellingTypes = new Set([
+    "residential",
+    "house",
+    "apartments",
+    "detached",
+    "semidetached_house",
+    "terrace",
+    "building",
+  ]);
+
+  for (const p of points) {
+    const info = p.info ?? {};
+    const addr = info.address ?? {};
+
+    if (addr.municipality) municipalitiesSet.add(String(addr.municipality));
+    if (addr.state) statesSet.add(String(addr.state));
+    if (addr.region) regionsSet.add(String(addr.region));
+    if (addr.country) countriesSet.add(String(addr.country));
+    if (info.display_name) displayNamesSet.add(String(info.display_name));
+    if (Array.isArray(info.boundingbox)) {
+      boundingBoxes.push(info.boundingbox);
+    }
+
+    const cls = (info.class ?? "").toLowerCase();
+    const typ = (info.type ?? "").toLowerCase();
+
+    if (
+      establishmentTypes.has(typ) ||
+      cls === "amenity" ||
+      cls === "shop" ||
+      cls === "office"
+    ) {
+      establishmentsTotal += 1;
+
+      if (typ.includes("construction") || cls.includes("construction")) {
+        establishmentsConstruction += 1;
+      }
+
+      if (!typ.includes("construction")) {
+        establishmentsOtherPurposes += 1;
+      }
+    }
+
+    if (dwellingTypes.has(typ) || cls === "building") {
+      dwellingsTotal += 1;
+
+      if (typ === "residential" || typ === "house" || typ === "apartments") {
+        dwellingsParticular += 1;
+      }
+    }
+  }
+
+  return {
+    locationInfo: {
+      municipalities: Array.from(municipalitiesSet),
+      states: Array.from(statesSet),
+      regions: Array.from(regionsSet),
+      countries: Array.from(countriesSet),
+      displayNames: Array.from(displayNamesSet),
+      boundingBoxes,
+    },
+    establishmentStats: {
+      total: establishmentsTotal,
+      construction: establishmentsConstruction,
+      otherPurposes: establishmentsOtherPurposes,
+    },
+    dwellingStats: {
+      total: dwellingsTotal,
+      particular: dwellingsParticular,
+    },
+    demographicData: {},
+    infrastructureData: {},
+    environmentalData: {},
+  };
 }
 
 export async function analyzePolygon(polygon: Feature<Polygon>): Promise<{
@@ -40,13 +175,11 @@ export async function analyzePolygon(polygon: Feature<Polygon>): Promise<{
 }> {
   console.log("🔷 Polígono recebido:", JSON.stringify(polygon, null, 2));
 
-  // Pegar pontos do serviço
   const pointsData = await getPoints();
   const geoPoints: GeoPoint[] = pointsData?.geoPoints ?? [];
   console.log("📦 Retorno de getPoints():", pointsData);
   console.log("📍 Total de pontos recebidos:", geoPoints.length);
 
-  // Converter para Feature<Point> do GeoJSON
   const pointsFeatures: Feature<Point>[] = geoPoints
     .filter(
       (p: GeoPoint) =>
@@ -59,12 +192,11 @@ export async function analyzePolygon(polygon: Feature<Polygon>): Promise<{
       type: "Feature",
       geometry: {
         type: "Point",
-        coordinates: [Number(p.lon), Number(p.lat)], // GeoJSON: [lng, lat]
+        coordinates: [Number(p.lon), Number(p.lat)],
       },
       properties: p,
     }));
 
-  // Filtrar pontos que estão dentro do polígono
   const pointsInside: GeoPoint[] = pointsFeatures
     .filter((pointFeature: Feature<Point>) =>
       turf.booleanPointInPolygon(pointFeature, polygon)
@@ -73,14 +205,12 @@ export async function analyzePolygon(polygon: Feature<Polygon>): Promise<{
 
   console.log("✅ Pontos dentro:", pointsInside.length);
 
-  // Extrair valores numéricos principais
   const values: number[] = pointsInside
-    .map((point: GeoPoint) => Number(point.value ?? point.valor ?? 0))
+    .map((point: GeoPoint) => Number(point.value ?? point.valor))
     .filter((val: number) => !isNaN(val));
 
   console.log("📊 Valores extraídos:", values);
 
-  // Calcular estatísticas básicas
   const totalPoints = pointsInside.length;
   const sum = values.reduce((acc, val) => acc + val, 0);
   const mean = totalPoints ? sum / totalPoints : 0;
@@ -94,7 +224,6 @@ export async function analyzePolygon(polygon: Feature<Polygon>): Promise<{
       ? (sortedValues[mid - 1] + sortedValues[mid]) / 2
       : sortedValues[mid];
 
-  // Extrair dados adicionais dos pontos
   const additionalData = extractAdditionalData(pointsInside);
 
   return {
@@ -110,118 +239,40 @@ export async function analyzePolygon(polygon: Feature<Polygon>): Promise<{
   };
 }
 
-// Função para extrair dados adicionais dos pontos
-function extractAdditionalData(points: GeoPoint[]): AdditionalData {
-  const censusData: Record<string, number> = {};
-  const categorySummary: Record<string, number> = {};
-  const allProperties: Record<string, number> = {};
+export function createAnalysisPromptFromPoints(
+  pointsInside: GeoPoint[]
+): string {
+  if (!pointsInside.length) {
+    return "Nenhum ponto encontrado dentro do polígono para análise.";
+  }
 
-  // Inicializar estatísticas de estabelecimentos e domicílios
-  const establishmentStats = {
-    total: 0,
-    construction: 0,
-    otherPurposes: 0,
-  };
-
-  const dwellingStats = {
-    total: 0,
-    particular: 0,
-  };
-
-  points.forEach((point) => {
-    Object.keys(point).forEach((key) => {
-      if (
-        key !== "latitude" &&
-        key !== "longitude" &&
-        key !== "id" &&
-        key !== "lat" &&
-        key !== "lon" &&
-        key !== "value" &&
-        key !== "valor" &&
-        key !== "createdAt" &&
-        key !== "info"
-      ) {
-        const value = Number(point[key]) || 0;
-
-        // Coletar todos os dados de propriedades
-        allProperties[key] = (allProperties[key] || 0) + value;
-
-        // Dados específicos do censo
-        if (key.includes("censo_")) {
-          censusData[key] = (censusData[key] || 0) + value;
-        }
-
-        // Categorizar por prefixo
-        const category = key.split("_")[0];
-        if (category && category !== "censo") {
-          categorySummary[category] = (categorySummary[category] || 0) + value;
-        }
-
-        // Estatísticas específicas
-        if (key.includes("estabelecimento_total")) {
-          establishmentStats.total += value;
-        }
-        if (key.includes("estabelecimento_construcao")) {
-          establishmentStats.construction += value;
-        }
-        if (key.includes("estabelecimento_outras_finalidades")) {
-          establishmentStats.otherPurposes += value;
-        }
-        if (key.includes("domicilio_total")) {
-          dwellingStats.total += value;
-        }
-        if (key.includes("domicilio_particular")) {
-          dwellingStats.particular += value;
-        }
-      }
-    });
+  const pontosDescritos = pointsInside.map((p) => {
+    const info = p.info || {};
+    const address = info.address || {};
+    return {
+      id: p.id,
+      name: info.name || "N/A",
+      type: info.type || info.class || "N/A",
+      location: { lat: p.lat, lon: p.lon },
+      importance: info.importance ?? "N/A",
+      rank: info.place_rank ?? "N/A",
+      region: address.region ?? "N/A",
+      country: address.country ?? "N/A",
+    };
   });
 
-  return {
-    censusData,
-    establishmentStats,
-    dwellingStats,
-    categorySummary,
-    allProperties,
-  };
-}
-
-// Função auxiliar para criar prompt rico para IA
-export function createAnalysisPrompt(
-  analysis: AnalysisResult,
-  additionalData: AdditionalData
-): string {
-  const { censusData, establishmentStats, dwellingStats } = additionalData;
-
   return `
-Como especialista em análise geoespacial e socioeconômica, analise esta região com base nos seguintes dados:
+Você é um especialista em geografia, urbanismo e desenvolvimento regional.
+Receba os seguintes pontos dentro de um polígono: ${JSON.stringify(
+    pontosDescritos
+  )}.
 
-INFORMAÇÕES GERAIS:
-- Total de pontos analisados: ${analysis.totalPoints}
-- Valor total: ${analysis.sum}
-- Valor médio: ${analysis.mean.toFixed(2)}
-- Mediana dos valores: ${analysis.median}
-
-DADOS DO CENSO 2022:
-- Total de estabelecimentos: ${establishmentStats.total}
-- Estabelecimentos de construção: ${establishmentStats.construction}
-- Estabelecimentos com outras finalidades: ${establishmentStats.otherPurposes}
-- Total de domicílios: ${dwellingStats.total}
-- Domicílios particulares: ${dwellingStats.particular}
-
-DADOS DETALHADOS DO CENSO:
-${Object.entries(censusData)
-  .filter(([_, value]) => Number(value) > 0)
-  .map(([key, value]) => `- ${key.replace(/_/g, " ").toUpperCase()}: ${value}`)
-  .join("\n")}
-
-ANÁLISE SOLICITADA:
-Por favor, forneça uma análise completa incluindo:
-1. Análise socioeconômica da área
-2. Potencial de desenvolvimento e investimento
-3. Recomendações para intervenções urbanas
-4. Comparação com áreas similares
-5. Insights sobre a distribuição espacial dos dados
-6. Tendências e oportunidades identificadas
-`;
+Regras de análise:
+- Forneça apenas análise socioeconômica, demográfica, histórica, cultural, ambiental e oportunidades de desenvolvimento.
+- Não repita informações básicas já fornecidas.
+- Não use markdown, títulos ou listas.
+- Seja objetiva e direta, em texto corrido.
+- Faça comparações quando relevante com regiões similares no Brasil e no mundo.
+- Inclua insights estratégicos de infraestrutura, planejamento territorial e economia local.
+  `;
 }

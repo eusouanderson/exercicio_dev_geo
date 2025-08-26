@@ -149,7 +149,7 @@ export function useMap(mapContainerId: string) {
         state.map.value as L.Map,
         localUpdatePointsLayer
       );
-      //await loadPersistedPoints(layers.customLayer);
+
       await loadSavedPolygons(layers.savedPolygonsLayer);
     }
   };

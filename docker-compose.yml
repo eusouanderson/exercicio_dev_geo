@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16
+    container_name: my_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U myuser']
+      interval: 10s
+      retries: 5
+      timeout: 5s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - '3002:3002'
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./backend/.env:/app/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://myuser:mypassword@db:5432/mydatabase
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - '3003:3003'
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
