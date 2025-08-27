@@ -1,8 +1,10 @@
 import { getPoints } from "@/services/pointsService";
+import type { AdditionalData, GeoPoint } from "@/types/analysis";
 import type { AnalysisResult } from "@/types/map";
 import * as turf from "@turf/turf";
 import type { Feature, Point, Polygon } from "geojson";
 
+<<<<<<< HEAD
 type GeoPoint = {
   id: number;
   lat: string;
@@ -168,6 +170,8 @@ function extractAdditionalData(points: GeoPoint[]): AdditionalData {
   };
 }
 
+=======
+>>>>>>> fee6ade (fix: resolve merge conflicts)
 export async function analyzePolygon(polygon: Feature<Polygon>): Promise<{
   pointsInside: GeoPoint[];
   analysis: AnalysisResult;
@@ -239,6 +243,7 @@ export async function analyzePolygon(polygon: Feature<Polygon>): Promise<{
   };
 }
 
+<<<<<<< HEAD
 export function createAnalysisPromptFromPoints(
   pointsInside: GeoPoint[]
 ): string {
@@ -276,4 +281,74 @@ Regras de análise:
 - Faça comparações quando relevante com regiões similares no Brasil e no mundo.
 - Inclua insights estratégicos de infraestrutura, planejamento territorial e economia local.
   `;
+=======
+function extractAdditionalData(points: GeoPoint[]): AdditionalData {
+  const censusData: Record<string, number> = {};
+  const categorySummary: Record<string, number> = {};
+  const allProperties: Record<string, number> = {};
+
+  const establishmentStats = {
+    total: 0,
+    construction: 0,
+    otherPurposes: 0,
+  };
+
+  const dwellingStats = {
+    total: 0,
+    particular: 0,
+  };
+
+  points.forEach((point) => {
+    Object.keys(point).forEach((key) => {
+      if (
+        key !== "latitude" &&
+        key !== "longitude" &&
+        key !== "id" &&
+        key !== "lat" &&
+        key !== "lon" &&
+        key !== "value" &&
+        key !== "valor" &&
+        key !== "createdAt" &&
+        key !== "info"
+      ) {
+        const value = Number(point[key]) || 0;
+
+        allProperties[key] = (allProperties[key] || 0) + value;
+
+        if (key.includes("censo_")) {
+          censusData[key] = (censusData[key] || 0) + value;
+        }
+
+        const category = key.split("_")[0];
+        if (category && category !== "censo") {
+          categorySummary[category] = (categorySummary[category] || 0) + value;
+        }
+
+        if (key.includes("estabelecimento_total")) {
+          establishmentStats.total += value;
+        }
+        if (key.includes("estabelecimento_construcao")) {
+          establishmentStats.construction += value;
+        }
+        if (key.includes("estabelecimento_outras_finalidades")) {
+          establishmentStats.otherPurposes += value;
+        }
+        if (key.includes("domicilio_total")) {
+          dwellingStats.total += value;
+        }
+        if (key.includes("domicilio_particular")) {
+          dwellingStats.particular += value;
+        }
+      }
+    });
+  });
+
+  return {
+    censusData,
+    establishmentStats,
+    dwellingStats,
+    categorySummary,
+    allProperties,
+  };
+>>>>>>> fee6ade (fix: resolve merge conflicts)
 }
