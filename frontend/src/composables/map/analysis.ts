@@ -268,6 +268,7 @@ Receba os seguintes pontos dentro de um polígono: ${JSON.stringify(
   )}.
 
 Regras de análise:
+- Primeiro ao pegar os pontos mostre o total de pontos, soma, média e mediana.
 - Forneça apenas análise socioeconômica, demográfica, histórica, cultural, ambiental e oportunidades de desenvolvimento.
 - Não repita informações básicas já fornecidas.
 - Não use markdown, títulos ou listas.
